@@ -17,7 +17,17 @@ st.title("🧠 AI Creativity and Idea Generation Survey")
 if "page" not in st.session_state:
     st.session_state.page = "intro"
 if "responses" not in st.session_state:
-    st.session_state.responses = {}
+    st.session_state.responses = {
+        "no_ai_text": "",
+        "with_ai_text": "",
+        "human_first_text": "",
+        "no_ai_image1": "",
+        "no_ai_image2": "",
+        "with_ai_image1": "",
+        "with_ai_image2": "",
+        "human_first_image1": "",
+        "human_first_image2": ""
+    }
 if "text_round" not in st.session_state:
     st.session_state.text_round = 0
 if "condition_map" not in st.session_state:
@@ -189,6 +199,7 @@ elif st.session_state.page == "text_tasks":
         }
     }
 
+    # Randomize condition ↔ category once per participant
     if not st.session_state.condition_map:
         topics = random.sample(list(briefs.keys()), 3)
         conditions = ["No-AI", "AI-first", "Human-first"]
@@ -203,23 +214,20 @@ elif st.session_state.page == "text_tasks":
         st.subheader(f"Round {round_idx + 1}: {current_category}")
         st.write("**Brief:**", content["brief"])
 
-        # 🟩 Assign fixed column names
-        if condition == "No-AI":
-            st.markdown("_Compose a striking headline for this brief._")
-            user_text = st.text_area("Write your headline:", key=f"no_ai_text_{round_idx}")
-            st.session_state.responses[f"no_ai_text_round_{round_idx+1}"] = user_text
+        user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
 
+        if condition == "No-AI":
+            st.session_state.responses["no_ai_text"] = user_text
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            user_text = st.text_area("Write your headline:", key=f"with_ai_text_{round_idx}")
-            st.session_state.responses[f"with_ai_text_round_{round_idx+1}"] = user_text
-
+            st.session_state.responses["with_ai_text"] = user_text
         else:
-            st.markdown("_Give this story a headline with flair._")
-            user_text = st.text_area("Write your headline:", key=f"human_first_text_{round_idx}")
-            st.session_state.responses[f"human_first_text_round_{round_idx+1}"] = user_text
+            st.markdown("### Example AI Headlines")
+            for h in content["ai"]:
+                st.write("-", h)
+            st.session_state.responses["human_first_text"] = user_text
 
         if user_text.strip() and st.button("Next ➡️"):
             st.session_state.text_round += 1
@@ -232,7 +240,7 @@ elif st.session_state.page == "text_tasks":
         st.rerun()
 
 # --------------------------------------------------
-# D. Image Caption Tasks (same naming logic)
+# D. Image Caption Tasks
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
@@ -277,20 +285,26 @@ elif st.session_state.page == "image_tasks":
         st.subheader(f"Round {img_round + 1}: Condition = {condition}")
 
         for idx, (img, name, ais) in enumerate(image_pair, start=1):
+            st.markdown(f"### {name}")
             image_path = Path(__file__).parent / img
             if image_path.exists():
                 st.image(str(image_path), caption=name)
-
-            key_prefix = ""
-            if condition == "No-AI":
-                key_prefix = "no_ai"
-            elif condition == "AI-first":
-                key_prefix = "with_ai"
             else:
-                key_prefix = "human_first"
+                st.warning(f"⚠️ Could not find {img}.")
 
-            cap = st.text_area(f"Caption for {name}:", key=f"{key_prefix}_image{idx}_round{img_round+1}")
-            st.session_state.responses[f"{key_prefix}_image{idx}_round{img_round+1}"] = cap
+            cap = st.text_area("Write your caption:", key=f"{img}_text")
+            if condition == "No-AI":
+                st.session_state.responses[f"no_ai_image{idx}"] = cap
+            elif condition == "AI-first":
+                st.markdown("**Example AI Captions**")
+                for c in ais:
+                    st.write("-", c)
+                st.session_state.responses[f"with_ai_image{idx}"] = cap
+            else:
+                st.markdown("**Example AI Captions**")
+                for c in ais:
+                    st.write("-", c)
+                st.session_state.responses[f"human_first_image{idx}"] = cap
 
         if st.button("Next ➡️"):
             st.session_state.image_round += 1
@@ -298,3 +312,55 @@ elif st.session_state.page == "image_tasks":
     else:
         st.session_state.page = "post_reflection"
         st.rerun()
+
+# --------------------------------------------------
+# E. Final Reflection
+# --------------------------------------------------
+elif st.session_state.page == "post_reflection":
+    st.header("🧩 Post-Survey Reflection")
+    st.markdown("Rate your overall experience across all text and image rounds (1–5):")
+    st.session_state.responses["overall_trust"] = st.slider(
+        "Overall, I trusted the AI suggestions.", 1, 5, 3)
+    st.session_state.responses["overall_original"] = st.slider(
+        "Overall, my ideas felt original.", 1, 5, 3)
+    st.session_state.responses["overall_fixation"] = st.slider(
+        "It was hard to think beyond the AI’s ideas.", 1, 5, 3)
+
+    if st.button("Finish Survey ✅"):
+        st.session_state.responses["timestamp_end"] = datetime.now().isoformat()
+        save_response(st.session_state.responses)
+        st.session_state.page = "done"
+        st.rerun()
+
+# --------------------------------------------------
+# F. End Page (GitHub Sync + Admin-only Download)
+# --------------------------------------------------
+elif st.session_state.page == "done":
+    st.balloons()
+    st.header("✅ Survey Complete")
+    st.success("Thank you! Your responses have been saved and backed up.")
+
+    file_path = "responses.csv"
+    if os.path.exists(file_path):
+        push_to_github(file_path)
+
+    st.markdown("### 👩‍💼 Admin Access (Researcher Only)")
+    admin_key = st.text_input("Enter admin passcode:", type="password")
+
+    ADMIN_PASSWORD = "mySecretKey123"  # change this!
+
+    if admin_key == ADMIN_PASSWORD:
+        st.success("🔐 Admin verified.")
+        df = load_responses()
+        if len(df) > 0:
+            csv_data = df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="📥 Download responses.csv",
+                data=csv_data,
+                file_name="responses.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("No responses recorded yet.")
+    elif admin_key:
+        st.error("❌ Incorrect passcode. Access denied.")
