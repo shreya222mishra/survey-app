@@ -202,7 +202,7 @@ elif st.session_state.page == "text_tasks":
 
         if condition == "No-AI":
             st.markdown("_Please write your own headlines for this brief._")
-            user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+            user_text = st.text_area("Write 1 headline:", key=f"{current_category}_text")
             st.session_state.responses[user_key] = user_text
             if user_text.strip() and st.button("Next ➡️"):
                 st.session_state.text_round += 1
@@ -213,7 +213,7 @@ elif st.session_state.page == "text_tasks":
             for h in content["ai"]:
                 st.write("-", h)
             st.markdown("_Now write your own headlines inspired by the above._")
-            user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+            user_text = st.text_area("Write 1 headline:", key=f"{current_category}_text")
             st.session_state.responses[user_key] = user_text
             if user_text.strip() and st.button("Next ➡️"):
                 st.session_state.text_round += 1
@@ -221,7 +221,7 @@ elif st.session_state.page == "text_tasks":
 
         else:  # Human-first
             st.markdown("_Please write your own headlines first._")
-            user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+            user_text = st.text_area("Write 1 headline:", key=f"{current_category}_text")
             if user_text.strip():
                 st.markdown("### Example AI Headlines")
                 for h in content["ai"]:
