@@ -211,7 +211,13 @@ elif st.session_state.page == "image_tasks":
     cond = st.session_state.condition
     for img, name, ais in image_sets:
         st.subheader(name)
-        st.image(f"{img}", caption=f"{name} (placeholder)")
+    import pathlib
+# inside your image loop:
+     image_path = pathlib.Path(__file__).parent / img
+     if image_path.exists():
+        st.image(str(image_path), caption=f"{name} (placeholder)")
+     else:
+        st.warning(f"⚠️ Could not find {img} — please check file name.")
         if cond == "AI-first":
             st.markdown("### Example AI Captions")
             for c in ais:
