@@ -204,20 +204,37 @@ elif st.session_state.page == "text_tasks":
         st.subheader(f"Round {round_idx + 1}: {current_category}")
         st.write("**Brief:**", content["brief"])
         user_key = f"{condition.lower().replace('-', '_')}_text"
-        user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
 
-        if condition == "AI-first":
+        if condition == "No-AI":
+            st.markdown("_Compose a striking headline for this brief._")
+            user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
+            st.session_state.responses[user_key] = user_text
+
+        elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-        elif condition == "Human-first":
+            st.markdown("_Now write your own headline inspired by the above._")
+            user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
+            st.session_state.responses[user_key] = user_text
+
+        else:  # Human-first
             st.markdown("_Write first, then see AI examples._")
+            user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
+            st.session_state.responses[user_key] = user_text
+
             if user_text.strip():
                 st.markdown("### Example AI Headlines")
                 for h in content["ai"]:
                     st.write("-", h)
-
-        st.session_state.responses[user_key] = user_text
+                st.markdown("**Would you like to revise your headline based on these AI examples?**")
+                improve_choice = st.radio("Select one:", ["No", "Yes"], index=0, horizontal=True,
+                                          key=f"improve_{round_idx}")
+                revised_text = ""
+                if improve_choice == "Yes":
+                    revised_text = st.text_area("Revise your headline below:", key=f"revised_{round_idx}")
+                st.session_state.responses[f"{user_key}_improved"] = improve_choice
+                st.session_state.responses[f"{user_key}_revised"] = revised_text
 
         if user_text.strip() and st.button("Next ➡️"):
             st.session_state.text_round += 1
