@@ -153,20 +153,14 @@ elif st.session_state.page == "text_tasks":
             st.session_state.responses[user_key] = st.text_area(f"Write 3–5 headlines for {topic}")
 
         st.markdown("Rate your experience (1–5):")
-        st.session_state.responses[f"{topic}_trust"] = st.slider(
-    "I trusted the AI suggestions.", 1, 5, 3, key=f"{topic}_trust_slider"
-)
-st.session_state.responses[f"{topic}_original"] = st.slider(
-    "My ideas felt original.", 1, 5, 3, key=f"{topic}_orig_slider"
-)
-st.session_state.responses[f"{topic}_fixation"] = st.slider(
-    "It was hard to think beyond the AI’s ideas.", 1, 5, 3, key=f"{topic}_fix_slider"
-)
+        st.session_state.responses[f"{topic}_trust"] = st.slider("I trusted the AI suggestions.", 1, 5, 3, key=f"{topic}_trust_slider")
+        st.session_state.responses[f"{topic}_original"] = st.slider("My ideas felt original.", 1, 5, 3, key=f"{topic}_orig_slider")
+        st.session_state.responses[f"{topic}_fixation"] = st.slider("It was hard to think beyond the AI’s ideas.", 1, 5, 3, key=f"{topic}_fix_slider")
 
 
-    if st.button("Next ➡️"):
-        st.session_state.page = "image_tasks"
-        st.rerun()
+        if st.button("Next ➡️"):
+          st.session_state.page = "image_tasks"
+           st.rerun()
 
 # --------------------------------------------------
 # D. Image generation (captions)
