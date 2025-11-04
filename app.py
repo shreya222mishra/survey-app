@@ -7,7 +7,7 @@ from pathlib import Path
 # --------------------------------------------------
 # Page Setup
 # --------------------------------------------------
-st.set_page_config(page_title="AI Creativity Survey", layout="wide")
+st.set_page_config(page_title="AI Creativity and Idea Generation Survey", layout="wide")
 st.title("🧠 AI Creativity and Idea Generation Survey")
 
 # --------------------------------------------------
@@ -15,8 +15,6 @@ st.title("🧠 AI Creativity and Idea Generation Survey")
 # --------------------------------------------------
 if "page" not in st.session_state:
     st.session_state.page = "intro"
-if "condition" not in st.session_state:
-    st.session_state.condition = random.choice(["AI-first", "Human-first", "No-AI"])
 if "responses" not in st.session_state:
     st.session_state.responses = {}
 if "text_round" not in st.session_state:
@@ -73,7 +71,6 @@ elif st.session_state.page == "demographics":
             "major": major,
             "language": language,
             "creative_exp": creative,
-            "condition": st.session_state.condition,
             "timestamp_start": datetime.now().isoformat()
         })
         st.session_state.page = "ai_familiarity"
@@ -94,6 +91,7 @@ elif st.session_state.page == "ai_familiarity":
     ]
     for i, q in enumerate(qs):
         likerts[q] = st.slider(q, 1, 5, 3, key=f"ai_fam_{i}")
+
     if st.button("Next ➡️"):
         st.session_state.responses.update(likerts)
         st.session_state.page = "text_tasks"
@@ -102,7 +100,7 @@ elif st.session_state.page == "ai_familiarity":
         st.rerun()
 
 # --------------------------------------------------
-# C. Text Generation Tasks (3 Rounds)
+# C. Text Generation (3 rounds randomized)
 # --------------------------------------------------
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
@@ -113,8 +111,8 @@ elif st.session_state.page == "text_tasks":
             "brief": "Researchers developed a new EV battery that charges in under five minutes, promising to revolutionize electric mobility.",
             "ai": [
                 "Breakthrough Battery Promises Ultra-Fast EV Charging",
-                "Game-Changer: EV Battery Cuts Charging Time to Minutes",
-                "Rapid-Charge EV Battery Could Transform Electric Mobility"
+                "Rapid-Charge EV Battery Could Transform Electric Mobility",
+                "University Team Unveils Lightning-Fast EV Battery Tech"
             ]
         },
         "Culture & Sports": {
@@ -141,44 +139,57 @@ elif st.session_state.page == "text_tasks":
 
     categories = st.session_state.category_order
     round_idx = st.session_state.text_round
-
-    # Define the condition order
     round_conditions = ["No-AI", "AI-first", "Human-first"]
 
     if round_idx < 3:
         current_category = categories[round_idx]
         condition = round_conditions[round_idx]
         content = briefs[current_category]
-
         st.subheader(f"Round {round_idx+1}: {current_category}")
         st.write("**Brief:**", content["brief"])
-
         user_key = f"{current_category}_response"
 
-        # --- Round behavior ---
         if condition == "No-AI":
             st.markdown("_Please write your own headlines for this brief._")
-            st.session_state.responses[user_key] = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+            user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+            st.session_state.responses[user_key] = user_text
+            if user_text.strip() and st.button("Next ➡️"):
+                st.session_state.text_round += 1
+                st.rerun()
+            elif not user_text.strip():
+                st.info("✏️ Please enter your headlines before proceeding.")
+
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
             st.markdown("_Now write your own headlines inspired by the above._")
-            st.session_state.responses[user_key] = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+            user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+            st.session_state.responses[user_key] = user_text
+            if user_text.strip() and st.button("Next ➡️"):
+                st.session_state.text_round += 1
+                st.rerun()
+            elif not user_text.strip():
+                st.info("✏️ Please enter your headlines before proceeding.")
+
         else:  # Human-first
             st.markdown("_Please write your own headlines first._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
-            st.markdown("### Example AI Headlines")
-            for h in content["ai"]:
-                st.write("-", h)
-            st.markdown("_You may revise your ideas after viewing the AI examples._")
+
+            # Reveal AI suggestions only after input
+            if user_text.strip():
+                st.markdown("### Example AI Headlines")
+                for h in content["ai"]:
+                    st.write("-", h)
+                st.markdown("_You may revise your ideas after viewing the AI examples._")
+
             st.session_state.responses[user_key] = user_text
+            if user_text.strip() and st.button("Next ➡️"):
+                st.session_state.text_round += 1
+                st.rerun()
+            elif not user_text.strip():
+                st.info("✏️ Please enter your headlines before proceeding.")
 
-        if st.button("Next ➡️"):
-            st.session_state.text_round += 1
-            st.rerun()
-
-    # After all 3 rounds, show post-survey
     else:
         st.subheader("Post-Survey: Reflect on the Text Generation Task")
         st.markdown("Rate your overall experience across all three rounds (1–5):")
@@ -190,7 +201,7 @@ elif st.session_state.page == "text_tasks":
             st.rerun()
 
 # --------------------------------------------------
-# D. Image Caption Tasks (unchanged)
+# D. Image Caption Tasks
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
@@ -231,7 +242,7 @@ elif st.session_state.page == "image_tasks":
         ])
     ]
 
-    cond = st.session_state.condition
+    cond = random.choice(["AI-first", "Human-first", "No-AI"])  # Random per participant
     for img, name, ais in image_sets:
         st.subheader(name)
         image_path = Path(__file__).parent / img
