@@ -19,9 +19,13 @@ if "condition" not in st.session_state:
     st.session_state.condition = random.choice(["AI-first", "Human-first", "No-AI"])
 if "responses" not in st.session_state:
     st.session_state.responses = {}
+if "text_round" not in st.session_state:
+    st.session_state.text_round = 0
+if "category_order" not in st.session_state:
+    st.session_state.category_order = []
 
 # --------------------------------------------------
-# Helper Functions
+# Helpers
 # --------------------------------------------------
 def save_response(data):
     file_exists = os.path.isfile("responses.csv")
@@ -50,7 +54,7 @@ if st.session_state.page == "intro":
         st.rerun()
 
 # --------------------------------------------------
-# A. Participant Information
+# A. Participant Info
 # --------------------------------------------------
 elif st.session_state.page == "demographics":
     st.header("A. Participant Information")
@@ -93,24 +97,24 @@ elif st.session_state.page == "ai_familiarity":
     if st.button("Next ➡️"):
         st.session_state.responses.update(likerts)
         st.session_state.page = "text_tasks"
+        st.category_order = []
+        st.text_round = 0
         st.rerun()
 
 # --------------------------------------------------
-# C. Text Generation Tasks
+# C. Text Generation Tasks (3 Rounds)
 # --------------------------------------------------
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
 
+    # Define briefs
     briefs = {
         "Science & Technology": {
             "brief": "Researchers developed a new EV battery that charges in under five minutes, promising to revolutionize electric mobility.",
             "ai": [
                 "Breakthrough Battery Promises Ultra-Fast EV Charging",
                 "Game-Changer: EV Battery Cuts Charging Time to Minutes",
-                "Rapid-Charge EV Battery Could Transform Electric Mobility",
-                "University Team Unveils Lightning-Fast EV Battery Tech",
-                "Automakers Eye 5-Minute Charge Battery for Future EVs",
-                "Next-Gen EV Battery Slashes Charging Times, Boosts Adoption"
+                "Rapid-Charge EV Battery Could Transform Electric Mobility"
             ]
         },
         "Culture & Sports": {
@@ -118,10 +122,7 @@ elif st.session_state.page == "text_tasks":
             "ai": [
                 "Global Chess Festival Brings New Life to Rural Town",
                 "Quiet Town Turns Global Hub for Chess Enthusiasts",
-                "From Silence to Strategy: Chess Festival Transforms Local Community",
-                "Rural Town Welcomes the World for International Chess Event",
-                "Checkmate to Obscurity: Chess Festival Revives Forgotten Town",
-                "Cafés and Classrooms Become Arenas at Global Chess Festival"
+                "From Silence to Strategy: Chess Festival Transforms Local Community"
             ]
         },
         "Health & Wellness": {
@@ -129,52 +130,67 @@ elif st.session_state.page == "text_tasks":
             "ai": [
                 "AI Listens for Stress: App Tracks Mental Health Through Speech",
                 "Can Your Voice Reveal Stress? New AI App Says Yes",
-                "Smartphone App Uses AI to Measure Stress in Real Time",
-                "Talking Tech: AI Tool Gauges Stress from Voice Patterns",
-                "AI App Promises Real-Time Stress Detection—Just by Listening",
-                "Experts Weigh In on AI App That Detects Stress Through Speech"
+                "Smartphone App Uses AI to Measure Stress in Real Time"
             ]
         }
     }
 
-    for topic, content in briefs.items():
-        st.subheader(topic)
+    # Randomize categories once
+    if not st.session_state.category_order:
+        st.session_state.category_order = random.sample(list(briefs.keys()), 3)
+
+    categories = st.session_state.category_order
+    round_idx = st.session_state.text_round
+
+    # Define the condition order
+    round_conditions = ["No-AI", "AI-first", "Human-first"]
+
+    if round_idx < 3:
+        current_category = categories[round_idx]
+        condition = round_conditions[round_idx]
+        content = briefs[current_category]
+
+        st.subheader(f"Round {round_idx+1}: {current_category}")
         st.write("**Brief:**", content["brief"])
-        cond = st.session_state.condition
-        user_key = f"{topic}_response"
 
-        if cond == "AI-first":
+        user_key = f"{current_category}_response"
+
+        # --- Round behavior ---
+        if condition == "No-AI":
+            st.markdown("_Please write your own headlines for this brief._")
+            st.session_state.responses[user_key] = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+        elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            st.write("### Your Headlines")
-            st.session_state.responses[user_key] = st.text_area(f"Write 3–5 headlines for {topic}", key=f"{topic}_text")
-        elif cond == "Human-first":
-            user_text = st.text_area(f"Write 3–5 headlines for {topic}", key=f"{topic}_text")
+            st.markdown("_Now write your own headlines inspired by the above._")
+            st.session_state.responses[user_key] = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
+        else:  # Human-first
+            st.markdown("_Please write your own headlines first._")
+            user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
+            st.markdown("_You may revise your ideas after viewing the AI examples._")
             st.session_state.responses[user_key] = user_text
-        else:
-            st.session_state.responses[user_key] = st.text_area(f"Write 3–5 headlines for {topic}", key=f"{topic}_text")
 
-        st.markdown("Rate your experience (1–5):")
-        st.session_state.responses[f"{topic}_trust"] = st.slider(
-            "I trusted the AI suggestions.", 1, 5, 3, key=f"{topic}_trust_slider"
-        )
-        st.session_state.responses[f"{topic}_original"] = st.slider(
-            "My ideas felt original.", 1, 5, 3, key=f"{topic}_orig_slider"
-        )
-        st.session_state.responses[f"{topic}_fixation"] = st.slider(
-            "It was hard to think beyond the AI’s ideas.", 1, 5, 3, key=f"{topic}_fix_slider"
-        )
+        if st.button("Next ➡️"):
+            st.session_state.text_round += 1
+            st.rerun()
 
-    if st.button("Next ➡️"):
-        st.session_state.page = "image_tasks"
-        st.rerun()
+    # After all 3 rounds, show post-survey
+    else:
+        st.subheader("Post-Survey: Reflect on the Text Generation Task")
+        st.markdown("Rate your overall experience across all three rounds (1–5):")
+        st.session_state.responses["overall_trust"] = st.slider("Overall, I trusted the AI suggestions.", 1, 5, 3)
+        st.session_state.responses["overall_original"] = st.slider("Overall, my ideas felt original.", 1, 5, 3)
+        st.session_state.responses["overall_fixation"] = st.slider("It was hard to think beyond the AI’s ideas.", 1, 5, 3)
+        if st.button("Next ➡️"):
+            st.session_state.page = "image_tasks"
+            st.rerun()
 
 # --------------------------------------------------
-# D. Image Caption Tasks
+# D. Image Caption Tasks (unchanged)
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
