@@ -270,7 +270,7 @@ elif st.session_state.page == "text_tasks":
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
-        all_images = [
+    all_images = [
         ("image1.jpg", "Relatable caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control.",
