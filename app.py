@@ -21,7 +21,7 @@ if "responses" not in st.session_state:
     st.session_state.responses = {}
 
 # --------------------------------------------------
-# Helpers
+# Helper Functions
 # --------------------------------------------------
 def save_response(data):
     file_exists = os.path.isfile("responses.csv")
@@ -50,7 +50,7 @@ if st.session_state.page == "intro":
         st.rerun()
 
 # --------------------------------------------------
-# A. Participant Info
+# A. Participant Information
 # --------------------------------------------------
 elif st.session_state.page == "demographics":
     st.header("A. Participant Information")
@@ -96,7 +96,7 @@ elif st.session_state.page == "ai_familiarity":
         st.rerun()
 
 # --------------------------------------------------
-# C. Text Tasks
+# C. Text Generation Tasks
 # --------------------------------------------------
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
@@ -180,36 +180,36 @@ elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
     image_sets = [
-        ("image_1.jpg", "Cooking caption ideas", [
+        ("image1.jpg", "Cooking caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control.",
             "When in doubt, taste it out."
         ]),
-        ("image_2.jpg", "1920s party scene captions", [
+        ("image2.jpg", "1920s party scene captions", [
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories."
         ]),
-        ("image_3.jpg", "Photographers with cameras captions", [
+        ("image3.jpg", "Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
             "Before smartphones, there were these warriors of the lens."
         ]),
-        ("image_4.jpg", "3D movie reaction captions", [
+        ("image4.jpg", "3D movie reaction captions", [
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream."
         ]),
-        ("image_5.jpg", "Bubble party captions", [
+        ("image5.jpg", "Bubble party captions", [
             "When the bubble gun steals the show.",
             "POV: The party just hit its peak."
         ]),
-        ("image_6.jpg", "Mountain hiking captions", [
+        ("image6.jpg", "Mountain hiking captions", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone."
         ]),
-        ("image_7.jpg", "Brainstorming teamwork captions", [
+        ("image7.jpg", "Brainstorming teamwork captions", [
             "Collaboration in action: where ideas come alive in color.",
             "Teamwork is the art of turning many thoughts into one vision."
         ]),
-        ("image_8.jpg", "Funny science classroom captions", [
+        ("image8.jpg", "Funny science classroom captions", [
             "When your financial plan is pure wizardry.",
             "Inflation, but make it magical."
         ])
@@ -218,7 +218,6 @@ elif st.session_state.page == "image_tasks":
     cond = st.session_state.condition
     for img, name, ais in image_sets:
         st.subheader(name)
-        # Absolute path safe loading
         image_path = Path(__file__).parent / img
         if image_path.exists():
             st.image(str(image_path), caption=f"{name}")
