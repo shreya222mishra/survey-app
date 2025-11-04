@@ -151,38 +151,46 @@ elif st.session_state.page == "ai_familiarity":
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
 
-    briefs = {
-        "Science & Technology": {
-            "brief: Researchers at a university lab have developed a new electric vehicle battery that can fully charge in under five minutes.
- The innovation could drastically reduce charging time and expand EV adoption worldwide.
- Automakers are already expressing interest in commercial trials.",
-            "ai": [
-                "Breakthrough Battery Promises Ultra-Fast EV Charging",
-                "Rapid-Charge EV Battery Could Transform Electric Mobility",
-                "University Team Unveils Lightning-Fast EV Battery Tech"
-            ]
-        },
-        "Culture & Sports": {
-            "brief: A small rural town has become the global stage for an international chess festival.
- Players from over 40 countries are competing in local cafés, schools, and community centers.
- The event has brought tourism, media attention, and a new sense of pride to the community.",
-            "ai": [
-                "Global Chess Festival Brings New Life to Rural Town",
-                "Quiet Town Turns Global Hub for Chess Enthusiasts",
-                "From Silence to Strategy: Chess Festival Transforms Local Community"
-            ]
-        },
-        "Health & Wellness": {
-            "brief: A new smartphone app claims it can detect a person’s stress levels simply by analyzing voice tone and pace.
- Developers say it could help users track mental health in real time.
- Experts are cautiously optimistic but warn about data privacy and accuracy concerns.",
-            "ai": [
-                "AI Listens for Stress: App Tracks Mental Health Through Speech",
-                "Can Your Voice Reveal Stress? New AI App Says Yes",
-                "Smartphone App Uses AI to Measure Stress in Real Time"
-            ]
-        }
+ briefs = {
+    "Science & Technology": {
+        "brief": (
+            "Researchers at a university lab have developed a new electric vehicle battery "
+            "that can fully charge in under five minutes. The innovation could drastically "
+            "reduce charging time and expand EV adoption worldwide. Automakers are already "
+            "expressing interest in commercial trials."
+        ),
+        "ai": [
+            "Breakthrough Battery Promises Ultra-Fast EV Charging",
+            "Rapid-Charge EV Battery Could Transform Electric Mobility",
+            "University Team Unveils Lightning-Fast EV Battery Tech"
+        ]
+    },
+    "Culture & Sports": {
+        "brief": (
+            "A small rural town has become the global stage for an international chess festival. "
+            "Players from over 40 countries are competing in local cafés, schools, and community centers. "
+            "The event has brought tourism, media attention, and a new sense of pride to the community."
+        ),
+        "ai": [
+            "Global Chess Festival Brings New Life to Rural Town",
+            "Quiet Town Turns Global Hub for Chess Enthusiasts",
+            "From Silence to Strategy: Chess Festival Transforms Local Community"
+        ]
+    },
+    "Health & Wellness": {
+        "brief": (
+            "A new smartphone app claims it can detect a person’s stress levels simply by analyzing voice tone and pace. "
+            "Developers say it could help users track mental health in real time. "
+            "Experts are cautiously optimistic but warn about data privacy and accuracy concerns."
+        ),
+        "ai": [
+            "AI Listens for Stress: App Tracks Mental Health Through Speech",
+            "Can Your Voice Reveal Stress? New AI App Says Yes",
+            "Smartphone App Uses AI to Measure Stress in Real Time"
+        ]
     }
+}
+
 
     if not st.session_state.condition_map:
         topics = random.sample(list(briefs.keys()), 3)
