@@ -61,7 +61,7 @@ if st.session_state.page == "intro":
     st.markdown("""
     Welcome!  
     This study explores how people create text and image captions with or without AI help.  
-    Your answers are anonymous, and you may stop anytime.
+    Your answers are anonymous.
     """)
     if st.button("Start Survey"):
         st.session_state.page = "demographics"
