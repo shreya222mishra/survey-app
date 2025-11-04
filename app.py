@@ -1,5 +1,5 @@
 import streamlit as st
-import random, time, csv, os
+import random, csv, os
 from datetime import datetime
 import pandas as pd
 
@@ -12,12 +12,12 @@ st.title("🧠 AI Creativity and Idea Generation Survey")
 if "page" not in st.session_state:
     st.session_state.page = "intro"
 if "condition" not in st.session_state:
-    st.session_state.condition = random.choice(["AI-first","Human-first","No-AI"])
+    st.session_state.condition = random.choice(["AI-first", "Human-first", "No-AI"])
 if "responses" not in st.session_state:
     st.session_state.responses = {}
 
 # --------------------------------------------------
-# Helper to write CSV
+# Helper functions
 # --------------------------------------------------
 def save_response(data):
     file_exists = os.path.isfile("responses.csv")
@@ -27,15 +27,10 @@ def save_response(data):
             writer.writeheader()
         writer.writerow(data)
 
-# --------------------------------------------------
-# Helper to load responses for download
-# --------------------------------------------------
 def load_responses():
     if os.path.exists("responses.csv"):
-        df = pd.read_csv("responses.csv")
-        return df
-    else:
-        return pd.DataFrame()
+        return pd.read_csv("responses.csv")
+    return pd.DataFrame()
 
 # --------------------------------------------------
 # Intro / Consent
@@ -57,14 +52,18 @@ elif st.session_state.page == "demographics":
     st.header("A. Participant Information")
     pid = st.text_input("Participant ID (create any short code)")
     age = st.text_input("Age")
-    gender = st.selectbox("Gender", ["Prefer not to say","Female","Male","Other"])
+    gender = st.selectbox("Gender", ["Prefer not to say", "Female", "Male", "Other"])
     major = st.text_input("Major or academic background")
     language = st.text_input("Native language (optional)")
-    creative = st.text_area("Describe any prior creative work (writing, design, etc.)")
+
     if st.button("Next ➡️"):
         st.session_state.responses.update({
-            "participant_id": pid, "age": age, "gender": gender,
-            "major": major, "language": language, "creative_exp": creative,
+            "participant_id": pid,
+            "age": age,
+            "gender": gender,
+            "major": major,
+            "language": language,
+            "creative_exp": creative,
             "condition": st.session_state.condition,
             "timestamp_start": datetime.now().isoformat()
         })
@@ -84,8 +83,8 @@ elif st.session_state.page == "ai_familiarity":
         "I rely on AI suggestions more than my own ideas.",
         "I trust AI systems to provide unbiased suggestions."
     ]
-    for q in qs:
-        likerts[q] = st.slider(q,1,5,3)
+    for i, q in enumerate(qs):
+        likerts[q] = st.slider(q, 1, 5, 3, key=f"ai_fam_{i}")
     if st.button("Next ➡️"):
         st.session_state.responses.update(likerts)
         st.session_state.page = "text_tasks"
@@ -96,6 +95,7 @@ elif st.session_state.page == "ai_familiarity":
 # --------------------------------------------------
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
+
     briefs = {
         "Science & Technology": {
             "brief": "Researchers developed a new EV battery that charges in under five minutes, promising to revolutionize electric mobility.",
@@ -132,93 +132,107 @@ elif st.session_state.page == "text_tasks":
         }
     }
 
-    for topic,content in briefs.items():
+    for topic, content in briefs.items():
         st.subheader(topic)
         st.write("**Brief:**", content["brief"])
         cond = st.session_state.condition
         user_key = f"{topic}_response"
-        if cond=="AI-first":
+
+        if cond == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
-                st.write("-",h)
+                st.write("-", h)
             st.write("### Your Headlines")
-            st.session_state.responses[user_key] = st.text_area(f"Write 3–5 headlines for {topic}")
-        elif cond=="Human-first":
-            user_text = st.text_area(f"Write 3–5 headlines for {topic}")
+            st.session_state.responses[user_key] = st.text_area(f"Write 3–5 headlines for {topic}", key=f"{topic}_text")
+        elif cond == "Human-first":
+            user_text = st.text_area(f"Write 3–5 headlines for {topic}", key=f"{topic}_text")
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
-                st.write("-",h)
+                st.write("-", h)
             st.session_state.responses[user_key] = user_text
-        else: # No-AI
-            st.session_state.responses[user_key] = st.text_area(f"Write 3–5 headlines for {topic}")
+        else:
+            st.session_state.responses[user_key] = st.text_area(f"Write 3–5 headlines for {topic}", key=f"{topic}_text")
 
         st.markdown("Rate your experience (1–5):")
-        st.session_state.responses[f"{topic}_trust"] = st.slider("I trusted the AI suggestions.", 1, 5, 3, key=f"{topic}_trust_slider")
-        st.session_state.responses[f"{topic}_original"] = st.slider("My ideas felt original.", 1, 5, 3, key=f"{topic}_orig_slider")
-        st.session_state.responses[f"{topic}_fixation"] = st.slider("It was hard to think beyond the AI’s ideas.", 1, 5, 3, key=f"{topic}_fix_slider")
+        st.session_state.responses[f"{topic}_trust"] = st.slider(
+            "I trusted the AI suggestions.", 1, 5, 3, key=f"{topic}_trust_slider"
+        )
+        st.session_state.responses[f"{topic}_original"] = st.slider(
+            "My ideas felt original.", 1, 5, 3, key=f"{topic}_orig_slider"
+        )
+        st.session_state.responses[f"{topic}_fixation"] = st.slider(
+            "It was hard to think beyond the AI’s ideas.", 1, 5, 3, key=f"{topic}_fix_slider"
+        )
 
-
-        if st.button("Next ➡️"):
-          st.session_state.page = "image_tasks"
-           st.rerun()
+    if st.button("Next ➡️"):
+        st.session_state.page = "image_tasks"
+        st.rerun()
 
 # --------------------------------------------------
 # D. Image generation (captions)
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
+
     image_sets = [
-        ("image_1.jpg","Cooking caption ideas",[
+        ("image_1.jpg", "Cooking caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control.",
             "When in doubt, taste it out."
         ]),
-        ("image_2.jpg","1920s party scene captions",[
+        ("image_2.jpg", "1920s party scene captions", [
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories."
         ]),
-        ("image_3.jpg","Photographers with cameras captions",[
+        ("image_3.jpg", "Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
             "Before smartphones, there were these warriors of the lens."
         ]),
-        ("image_4.jpg","3D movie reaction captions",[
+        ("image_4.jpg", "3D movie reaction captions", [
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream."
         ]),
-        ("image_5.jpg","Bubble party captions",[
+        ("image_5.jpg", "Bubble party captions", [
             "When the bubble gun steals the show.",
             "POV: The party just hit its peak."
         ]),
-        ("image_6.jpg","Mountain hiking captions",[
+        ("image_6.jpg", "Mountain hiking captions", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone."
         ]),
-        ("image_7.jpg","Brainstorming teamwork captions",[
+        ("image_7.jpg", "Brainstorming teamwork captions", [
             "Collaboration in action: where ideas come alive in color.",
             "Teamwork is the art of turning many thoughts into one vision."
         ])
     ]
 
     cond = st.session_state.condition
-    for img,name,ais in image_sets:
+    for img, name, ais in image_sets:
         st.subheader(name)
         st.image(f"images/{img}", caption=f"{name} (placeholder)")
-        if cond=="AI-first":
+        if cond == "AI-first":
             st.markdown("### Example AI Captions")
-            for c in ais: st.write("-",c)
-            st.session_state.responses[f"{img}_caption"] = st.text_area("Write your own caption(s):")
-        elif cond=="Human-first":
-            cap = st.text_area("Write your own caption(s):")
+            for c in ais:
+                st.write("-", c)
+            st.session_state.responses[f"{img}_caption"] = st.text_area("Write your own caption(s):", key=f"{img}_text")
+        elif cond == "Human-first":
+            cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
             st.markdown("### Example AI Captions")
-            for c in ais: st.write("-",c)
+            for c in ais:
+                st.write("-", c)
             st.session_state.responses[f"{img}_caption"] = cap
         else:
-            st.session_state.responses[f"{img}_caption"] = st.text_area("Write your own caption(s):")
+            st.session_state.responses[f"{img}_caption"] = st.text_area("Write your own caption(s):", key=f"{img}_text")
 
-    
-    st.session_state.responses[f"{img}_trust"] = st.slider("I trusted the AI suggestions.", 1, 5, 3, key=f"{img}_trust_slider")
-    st.session_state.responses[f"{img}_original"] = st.slider("My ideas felt original.", 1, 5, 3, key=f"{img}_orig_slider")
-    st.session_state.responses[f"{img}_fixation"] = st.slider("It was hard to think beyond the AI’s ideas.", 1, 5, 3, key=f"{img}_fix_slider")
+        st.session_state.responses[f"{img}_trust"] = st.slider(
+            "I trusted the AI suggestions.", 1, 5, 3, key=f"{img}_trust_slider"
+        )
+        st.session_state.responses[f"{img}_original"] = st.slider(
+            "My ideas felt original.", 1, 5, 3, key=f"{img}_orig_slider"
+        )
+        st.session_state.responses[f"{img}_fixation"] = st.slider(
+            "It was hard to think beyond the AI’s ideas.", 1, 5, 3, key=f"{img}_fix_slider"
+        )
 
     if st.button("Finish Survey ✅"):
         st.session_state.responses["timestamp_end"] = datetime.now().isoformat()
@@ -227,14 +241,13 @@ elif st.session_state.page == "image_tasks":
         st.rerun()
 
 # --------------------------------------------------
-# End
+# End Page
 # --------------------------------------------------
 elif st.session_state.page == "done":
     st.balloons()
     st.header("✅ Survey Complete")
     st.success("Thank you! Your responses have been saved.")
 
-    # Download section
     st.markdown("### 📊 Download All Responses")
     df = load_responses()
     if len(df) > 0:
