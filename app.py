@@ -72,12 +72,12 @@ if st.session_state.page == "intro":
 # --------------------------------------------------
 elif st.session_state.page == "demographics":
     st.header("A. Participant Information")
-    pid = st.text_input("Participant ID (create any short code)")
+    pid = st.text_input("Participant ID (give your favourite number or short code)")
     age = st.text_input("Age")
     gender = st.selectbox("Gender", ["Prefer not to say", "Female", "Male", "Other"])
     major = st.text_input("Major or academic background")
     language = st.text_input("Native language (optional)")
-    creative = st.text_area("Describe any prior creative work (writing, design, etc.)")
+    creative = st.text_area("Describe how you use AI (writing, design, etc.)")
 
     if st.button("Next ➡️"):
         st.session_state.responses.update({
