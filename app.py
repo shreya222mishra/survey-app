@@ -270,33 +270,54 @@ elif st.session_state.page == "text_tasks":
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
-    # List of images: (filename, label, ai_examples)
-    all_images = [
+        all_images = [
         ("image1.jpg", "Relatable caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
-            "Cooking is an art — tasting is quality control."
+            "Cooking is an art — tasting is quality control.",
+            "When in doubt, taste it out.",
+            "Flavors don’t guess themselves.",
+            "Behind every great dish is a chef who refuses to follow the recipe exactly."
         ]),
         ("image2.jpg", "Playful caption ideas", [
             "When the champagne hits before the Roaring Twenties end.",
-            "Pour decisions make the best memories."
+            "Pour decisions make the best memories.",
+            "1920s group chat: ‘Who’s bringing the chaos?’",
+            "Standing on tables since before it was an Instagram trend.",
+            "Proof that girls’ night has always been iconic."
         ]),
-        ("image3.jpg", "Photographers with cameras captions", [
+        ("image3.jpg", "Witty caption ideas", [
             "Smile! You’re making tomorrow’s headlines.",
-            "Before smartphones, there were these warriors of the lens."
+            "Before smartphones, there were these warriors of the lens.",
+            "Say cheese—or say scandal.",
+            "A thousand flashes, one perfect shot.",
+            "Behind every headline is a crowd with cameras.",
+            "The paparazzi Olympics: may the fastest shutter win."
         ]),
-        ("image4.jpg", "3D movie reaction captions", [
+        ("image4.jpg", "Nostalgic caption ideas", [
             "When 3D movies were too real.",
-            "Immersive cinema before VR was even a dream."
+            "Immersive cinema before VR was even a dream.",
+            "When the movie jumps out—and so do your screams.",
+            "Proof that audiences have always been dramatic.",
+            "Cinematic innovation meets group panic.",
+            "They said it would be a thrilling experience. They weren’t kidding."
         ]),
         ("image5.jpg", "Celebration caption ideas", [
             "When the bubble gun steals the show.",
-            "POV: The party just hit its peak."
+            "POV: The party just hit its peak.",
+            "Caught mid-bubble, mid-laugh, mid-perfect memory.",
+            "No confetti? No problem — we’ve got bubbles and bad dance moves.",
+            "Because nothing says ‘celebration’ like bubbles and besties."
         ]),
         ("image6.jpg", "Inspirational caption ideas", [
             "Every trail leads to a story worth telling.",
-            "Adventure begins at the edge of your comfort zone."
+            "Adventure begins at the edge of your comfort zone.",
+            "Leave nothing but footprints, take nothing but perspective.",
+            "Not all who wander are lost—some are just finding themselves.",
+            "The path may be steep, but the view makes it worth it.",
+            "Chasing horizons, one trail at a time."
         ])
     ]
+
 
     # Fixed round order (No-AI → AI-first → Human-first)
     # Shuffle only which images appear in each round
