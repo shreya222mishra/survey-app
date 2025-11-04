@@ -35,30 +35,25 @@ def save_response(data):
     df_new = pd.DataFrame([data])
     file_path = "responses.csv"
 
-    # If file exists, align columns before appending
     if os.path.exists(file_path):
         try:
             df_existing = pd.read_csv(file_path)
-            # Make sure both dataframes have the same columns
             for col in df_existing.columns:
                 if col not in df_new.columns:
                     df_new[col] = ""
             for col in df_new.columns:
                 if col not in df_existing.columns:
                     df_existing[col] = ""
-            # Match the order
             df_new = df_new[df_existing.columns]
-            # Append safely
             df_final = pd.concat([df_existing, df_new], ignore_index=True)
             df_final.to_csv(file_path, index=False, encoding="utf-8", quoting=csv.QUOTE_ALL)
-        except Exception as e:
+        except Exception:
             backup_name = f"responses_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
             os.rename(file_path, backup_name)
             st.warning(f"⚠️ responses.csv corrupted — backed up as {backup_name}. A new file created.")
             df_new.to_csv(file_path, index=False, encoding="utf-8", quoting=csv.QUOTE_ALL)
     else:
         df_new.to_csv(file_path, index=False, encoding="utf-8", quoting=csv.QUOTE_ALL)
-
 
 
 def load_responses():
@@ -70,7 +65,7 @@ def load_responses():
         except Exception:
             backup_name = f"responses_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
             os.rename(file_path, backup_name)
-            st.warning(f"⚠️ responses.csv was inconsistent and backed up as {backup_name}. A new file has been created.")
+            st.warning(f"⚠️ responses.csv was inconsistent and backed up as {backup_name}.")
             return pd.DataFrame()
     return pd.DataFrame()
 
@@ -208,52 +203,56 @@ elif st.session_state.page == "text_tasks":
         }
     }
 
-    # Fixed round order: [No-AI, AI-first, Human-first]
-    # Shuffle only which category (brief) appears in each
+    # Fixed round order: [No-AI, AI-first, Human-first], shuffled briefs
     if not st.session_state.condition_map:
         topics = random.sample(list(briefs.keys()), 3)
-        conditions = ["No-AI", "AI-first", "Human-first"]
-        st.session_state.condition_map = list(zip(conditions, topics))
+        st.session_state.condition_map = [
+            ("No-AI", topics[0]),
+            ("AI-first", topics[1]),
+            ("Human-first", topics[2])
+        ]
 
     round_idx = st.session_state.text_round
     if round_idx < 3:
         condition, current_category = st.session_state.condition_map[round_idx]
         content = briefs[current_category]
+        base_key = condition.lower().replace("-", "_") + "_text"
 
         st.subheader(f"Round {round_idx + 1}: {current_category}")
         st.write("**Brief:**", content["brief"])
-        user_key = f"{condition.lower().replace('-', '_')}_text"
+        st.session_state.responses[f"{base_key}_category"] = current_category
 
         if condition == "No-AI":
             st.markdown("_Compose a striking headline for this brief._")
             user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
-            st.session_state.responses[user_key] = user_text
+            st.session_state.responses[base_key] = f"{current_category} — {user_text}"
 
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            st.markdown("_Invent an eye-catching headline inspired by the above._")
+            st.markdown("_Now write your own headline inspired by the above._")
             user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
-            st.session_state.responses[user_key] = user_text
+            st.session_state.responses[base_key] = f"{current_category} — {user_text}"
 
         else:  # Human-first
-            st.markdown("_Come up with a catchy headline, then see AI examples._")
+            st.markdown("_Write your headline first, then view AI examples._")
             user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
-            st.session_state.responses[user_key] = user_text
+            st.session_state.responses[base_key] = f"{current_category} — {user_text}"
 
             if user_text.strip():
                 st.markdown("### Example AI Headlines")
                 for h in content["ai"]:
                     st.write("-", h)
-                st.markdown("**Would you like to revise your headline based on these AI examples?**")
-                improve_choice = st.radio("Select one:", ["No", "Yes"], index=0, horizontal=True,
-                                          key=f"improve_{round_idx}")
+                improve_choice = st.radio(
+                    "Would you like to revise your headline based on these AI examples?",
+                    ["No", "Yes"], index=0, horizontal=True, key=f"improve_{round_idx}"
+                )
                 revised_text = ""
                 if improve_choice == "Yes":
                     revised_text = st.text_area("Revise your headline below:", key=f"revised_{round_idx}")
-                st.session_state.responses[f"{user_key}_improved"] = improve_choice
-                st.session_state.responses[f"{user_key}_revised"] = revised_text
+                st.session_state.responses[f"{base_key}_improved"] = improve_choice
+                st.session_state.responses[f"{base_key}_revised"] = revised_text
 
         if user_text.strip() and st.button("Next ➡️"):
             st.session_state.text_round += 1
@@ -266,42 +265,38 @@ elif st.session_state.page == "text_tasks":
         st.rerun()
 
 # --------------------------------------------------
-# D. Image Caption Tasks (Fixed Order, Shuffled Images)
-# --------------------------------------------------
-# --------------------------------------------------
-# D. Image Caption Tasks (Fixed Order, Shuffled Images)
+# D. Image Caption Tasks (Fixed Order, Shuffled Images, Label Stored)
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
     all_images = [
-        ("image1.jpg", "Relatable caption ideas", [
+        ("Relatable caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control."
         ]),
-        ("image2.jpg", "Playful caption ideas", [
+        ("Playful caption ideas", [
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories."
         ]),
-        ("image3.jpg", "Witty caption ideas", [
+        ("Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
             "Before smartphones, there were these warriors of the lens."
         ]),
-        ("image4.jpg", "Nostalgic caption ideas", [
+        ("3D movie reaction captions", [
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream."
         ]),
-        ("image5.jpg", "Celebration caption ideas", [
+        ("Celebration caption ideas", [
             "When the bubble gun steals the show.",
             "POV: The party just hit its peak."
         ]),
-        ("image6.jpg", "Inspirational caption ideas", [
+        ("Inspirational caption ideas", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone."
         ])
     ]
 
-    # Fixed round order (No-AI → AI-first → Human-first), shuffled images
     if not st.session_state.image_condition_map:
         random.shuffle(all_images)
         image_pairs = [all_images[i:i+2] for i in range(0, 6, 2)]
@@ -316,50 +311,36 @@ elif st.session_state.page == "image_tasks":
         condition, image_pair = st.session_state.image_condition_map[img_round]
         st.subheader(f"Round {img_round + 1}: Condition = {condition}")
 
-        for img, name, ais in image_pair:
+        base_key = condition.lower().replace("-", "_") + "_image_caption"
+        captions_combined = []
+
+        for name, ais in image_pair:
             st.markdown(f"### {name}")
-            image_path = Path(__file__).parent / img
-            if image_path.exists():
-                st.image(str(image_path), caption=name)
-            else:
-                st.warning(f"⚠️ Could not find {img}.")
 
-            user_key = f"{condition.lower().replace('-', '_')}_{img}"
-
-            # --- Condition-specific logic ---
             if condition == "No-AI":
-                st.markdown("_Write your own caption(s) for this image._")
-                cap = st.text_area("Your caption:", key=f"{img}_text")
-                st.session_state.responses[user_key] = cap
-
+                cap = st.text_area("Your caption:", key=f"{name}_text")
             elif condition == "AI-first":
                 st.markdown("**Example AI Captions**")
                 for c in ais:
                     st.write("-", c)
-                st.markdown("_Now write your own caption(s) inspired by the above._")
-                cap = st.text_area("Your caption:", key=f"{img}_text")
-                st.session_state.responses[user_key] = cap
-
-            else:  # Human-first
-                st.markdown("_Write your own caption(s) first._")
-                cap = st.text_area("Your caption:", key=f"{img}_text")
-                st.session_state.responses[user_key] = cap
-
+                cap = st.text_area("Your caption:", key=f"{name}_text")
+            else:
+                cap = st.text_area("Your caption:", key=f"{name}_text")
                 if cap.strip():
                     st.markdown("### Example AI Captions")
                     for c in ais:
                         st.write("-", c)
-
-                    st.markdown("**Would you like to revise your caption based on these AI examples?**")
-                    improve_choice = st.radio("Select one:", ["No", "Yes"], index=0,
-                                              horizontal=True, key=f"{img}_improve")
-
+                    improve_choice = st.radio("Would you like to revise your caption?",
+                                              ["No", "Yes"], index=0, horizontal=True,
+                                              key=f"{name}_improve")
                     revised_text = ""
                     if improve_choice == "Yes":
-                        revised_text = st.text_area("Revise your caption below:", key=f"{img}_revised")
+                        revised_text = st.text_area("Revise your caption below:", key=f"{name}_revised")
+                    st.session_state.responses[f"{base_key}_improved"] = improve_choice
+                    st.session_state.responses[f"{base_key}_revised"] = revised_text
+            captions_combined.append(f"{name} — {cap}")
 
-                    st.session_state.responses[f"{user_key}_improved"] = improve_choice
-                    st.session_state.responses[f"{user_key}_revised"] = revised_text
+        st.session_state.responses[base_key] = " | ".join(captions_combined)
 
         if st.button("Next ➡️"):
             st.session_state.image_round += 1
@@ -374,7 +355,6 @@ elif st.session_state.page == "image_tasks":
 # --------------------------------------------------
 elif st.session_state.page == "post_reflection":
     st.header("🧩 Post-Survey Reflection")
-    st.markdown("Rate your overall experience across all text and image rounds (1–5):")
     st.session_state.responses["overall_trust"] = st.slider(
         "Overall, I trusted the AI suggestions.", 1, 5, 3)
     st.session_state.responses["overall_original"] = st.slider(
@@ -402,7 +382,6 @@ elif st.session_state.page == "done":
 
     st.markdown("### 👩‍💼 Admin Access (Researcher Only)")
     admin_key = st.text_input("Enter admin passcode:", type="password")
-
     ADMIN_PASSWORD = "mySecretKey123"
 
     if admin_key == ADMIN_PASSWORD:
