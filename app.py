@@ -100,7 +100,7 @@ elif st.session_state.page == "ai_familiarity":
         st.rerun()
 
 # --------------------------------------------------
-# C. Text Generation (Counterbalanced 3 Rounds)
+# C. Text Generation (Fully Counterbalanced 3 Rounds)
 # --------------------------------------------------
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
@@ -133,10 +133,11 @@ elif st.session_state.page == "text_tasks":
         }
     }
 
-    # Randomized condition ↔ category mapping
+    # 🔀 Randomized condition ↔ category mapping once per participant
     if not st.session_state.condition_map:
         topics = random.sample(list(briefs.keys()), 3)
         conditions = ["No-AI", "AI-first", "Human-first"]
+        random.shuffle(conditions)  # randomize condition order too
         st.session_state.condition_map = list(zip(conditions, topics))
 
     round_idx = st.session_state.text_round
@@ -148,7 +149,7 @@ elif st.session_state.page == "text_tasks":
         st.write("**Brief:**", content["brief"])
         user_key = f"{current_category}_response"
 
-        # ---------- Round 1: No-AI ----------
+        # ---------- Round Type Logic ----------
         if condition == "No-AI":
             st.markdown("_Please write your own headlines for this brief._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
@@ -159,7 +160,6 @@ elif st.session_state.page == "text_tasks":
             elif not user_text.strip():
                 st.info("✏️ Please enter your headlines before proceeding.")
 
-        # ---------- Round 2: AI-first ----------
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
@@ -173,8 +173,7 @@ elif st.session_state.page == "text_tasks":
             elif not user_text.strip():
                 st.info("✏️ Please enter your headlines before proceeding.")
 
-        # ---------- Round 3: Human-first ----------
-        else:
+        else:  # Human-first
             st.markdown("_Please write your own headlines first._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
 
