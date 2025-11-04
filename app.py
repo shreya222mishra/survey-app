@@ -270,34 +270,35 @@ elif st.session_state.page == "text_tasks":
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
+    # Each tuple: (filename, label, example captions)
     all_images = [
-        ("Relatable caption ideas", [
+        ("image1.jpg", "Relatable caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control."
         ]),
-        ("Playful caption ideas", [
+        ("image2.jpg", "Playful caption ideas", [
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories."
         ]),
-        ("Photographers with cameras captions", [
+        ("image3.jpg", "Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
             "Before smartphones, there were these warriors of the lens."
         ]),
-        ("3D movie reaction captions", [
+        ("image4.jpg", "3D movie reaction captions", [
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream."
         ]),
-        ("Celebration caption ideas", [
+        ("image5.jpg", "Celebration caption ideas", [
             "When the bubble gun steals the show.",
             "POV: The party just hit its peak."
         ]),
-        ("Inspirational caption ideas", [
+        ("image6.jpg", "Inspirational caption ideas", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone."
         ])
     ]
 
-    # Fixed round order (No-AI → AI-first → Human-first), shuffled image sets
+    # Fixed round order (No-AI → AI-first → Human-first), but shuffled image order
     if not st.session_state.image_condition_map:
         random.shuffle(all_images)
         image_pairs = [all_images[i:i+2] for i in range(0, 6, 2)]
@@ -312,55 +313,56 @@ elif st.session_state.page == "image_tasks":
         condition, image_pair = st.session_state.image_condition_map[img_round]
         st.subheader(f"Round {img_round + 1}: Condition = {condition}")
 
-        # Use unified column name like no_ai_image_caption, ai_first_image_caption, etc.
+        # Unified column name (e.g. no_ai_image_caption)
         base_key = condition.lower().replace("-", "_") + "_image_caption"
         captions_combined = []
 
-        for name, ais in image_pair:
-            st.markdown(f"### {name}")
+        for img_file, label, ai_examples in image_pair:
+            st.markdown(f"### {label}")
 
-            # No-AI condition
+            # ✅ Show actual image (from same folder)
+            image_path = Path(__file__).parent / img_file
+            if image_path.exists():
+                st.image(str(image_path), caption=label)
+            else:
+                st.warning(f"⚠️ Could not find {img_file} in app directory.")
+
+            # --- Handle task input ---
             if condition == "No-AI":
                 st.markdown("_Write your own caption(s) for this image._")
-                cap = st.text_area("Your caption:", key=f"{name}_text")
+                cap = st.text_area("Your caption:", key=f"{img_file}_text")
 
-            # AI-first condition
             elif condition == "AI-first":
                 st.markdown("**Example AI Captions**")
-                for c in ais:
+                for c in ai_examples:
                     st.write("-", c)
                 st.markdown("_Now write your own caption(s) inspired by the above._")
-                cap = st.text_area("Your caption:", key=f"{name}_text")
+                cap = st.text_area("Your caption:", key=f"{img_file}_text")
 
-            # Human-first condition
-            else:
+            else:  # Human-first
                 st.markdown("_Write your own caption(s) first._")
-                cap = st.text_area("Your caption:", key=f"{name}_text")
+                cap = st.text_area("Your caption:", key=f"{img_file}_text")
                 if cap.strip():
                     st.markdown("### Example AI Captions")
-                    for c in ais:
+                    for c in ai_examples:
                         st.write("-", c)
                     st.markdown("**Would you like to revise your caption based on these AI examples?**")
                     improve_choice = st.radio("Select one:", ["No", "Yes"], index=0,
-                                              horizontal=True, key=f"{name}_improve")
+                                              horizontal=True, key=f"{img_file}_improve")
                     revised_text = ""
                     if improve_choice == "Yes":
-                        revised_text = st.text_area("Revise your caption below:", key=f"{name}_revised")
+                        revised_text = st.text_area("Revise your caption below:", key=f"{img_file}_revised")
                     st.session_state.responses[f"{base_key}_improved"] = improve_choice
                     st.session_state.responses[f"{base_key}_revised"] = revised_text
-                else:
-                    st.info("✏️ Please write a caption before continuing.")
 
-            # Combine label + caption text for CSV clarity
-            captions_combined.append(f"{name} — {cap}")
+            captions_combined.append(f"{label} — {cap}")
 
-        # Save both captions for this round in one unified column
+        # Save all captions in a single unified field
         st.session_state.responses[base_key] = " | ".join(captions_combined)
 
         if st.button("Next ➡️"):
             st.session_state.image_round += 1
             st.rerun()
-
     else:
         st.session_state.page = "post_reflection"
         st.rerun()
