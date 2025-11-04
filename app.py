@@ -231,12 +231,12 @@ elif st.session_state.page == "text_tasks":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            st.markdown("_Now write your own headline inspired by the above._")
+            st.markdown("_Invent an eye-catching headline inspired by the above._")
             user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
             st.session_state.responses[base_key] = f"{current_category} — {user_text}"
 
         else:  # Human-first
-            st.markdown("_Write your headline first, then view AI examples._")
+            st.markdown("_Write a punchy headline for this news brief, then view AI examples._")
             user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
             st.session_state.responses[base_key] = f"{current_category} — {user_text}"
 
@@ -271,29 +271,55 @@ elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
     all_images = [
-        ("Relatable caption ideas", [
+        ("Relatable", [
             "Taste-testing: the most important step in every masterpiece.",
-            "Cooking is an art — tasting is quality control."
-        ]),
-        ("Playful caption ideas", [
+            "Cooking is an art — tasting is quality control.",
+            "When in doubt, taste it out.",
+            "Flavors don’t guess themselves.",
+            "Behind every great dish is a chef who refuses to follow the recipe exactly."  ]),
+        ("Playful", [
             "When the champagne hits before the Roaring Twenties end.",
-            "Pour decisions make the best memories."
+            "Pour decisions make the best memories.",
+            "1920s group chat: ‘Who’s bringing the chaos?",
+            "Pour decisions make the best memories.",
+            "Standing on tables since before it was an Instagram trend.",
+            "Proof that girls’ night has always been iconic."
+
         ]),
-        ("Photographers with cameras captions", [
+        ("Witty", [
             "Smile! You’re making tomorrow’s headlines.",
-            "Before smartphones, there were these warriors of the lens."
+            "Before smartphones, there were these warriors of the lens.",
+            "Say cheese—or say scandal.",
+            "A thousand flashes, one perfect shot.",
+            "Behind every headline is a crowd with cameras.",
+            "The paparazzi Olympics: may the fastest shutter win."
+
         ]),
-        ("3D movie reaction captions", [
+        ("Nostalgic", [
             "When 3D movies were too real.",
-            "Immersive cinema before VR was even a dream."
+            "Immersive cinema before VR was even a dream.",
+            "When the movie jumps out—and so do your screams.",
+            "Proof that audiences have always been dramatic.",
+            "Cinematic innovation meets group panic.",
+            "They said it would be a thrilling experience. They weren’t kidding."
+
         ]),
-        ("Celebration caption ideas", [
+        ("Celebration", [
             "When the bubble gun steals the show.",
-            "POV: The party just hit its peak."
+            "POV: The party just hit its peak.",
+            "Caught mid-bubble, mid-laugh, mid-perfect memory.",
+            "No confetti? No problem — we’ve got bubbles and bad dance moves.",
+            "Because nothing says ‘celebration’ like bubbles and besties."
+
         ]),
-        ("Inspirational caption ideas", [
+        ("Inspirational", [
             "Every trail leads to a story worth telling.",
-            "Adventure begins at the edge of your comfort zone."
+            "Adventure begins at the edge of your comfort zone.",
+            "Leave nothing but footprints, take nothing but perspective.",
+            "Not all who wander are lost—some are just finding themselves.",
+            "The path may be steep, but the view makes it worth it.",
+            "Chasing horizons, one trail at a time."
+
         ])
     ]
 
