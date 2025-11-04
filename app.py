@@ -3,6 +3,7 @@ import random, csv, os
 from datetime import datetime
 import pandas as pd
 from pathlib import Path
+from github import Github
 
 # --------------------------------------------------
 # Page Setup
@@ -50,9 +51,44 @@ def load_responses():
         except Exception as e:
             backup_name = f"responses_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
             os.rename(file_path, backup_name)
-            st.warning(f"⚠️ responses.csv was inconsistent and has been backed up as {backup_name}. A new file has been created.")
+            st.warning(f"⚠️ responses.csv was inconsistent and backed up as {backup_name}. A new file has been created.")
             return pd.DataFrame()
     return pd.DataFrame()
+
+
+def push_to_github(file_path):
+    """Commit updated responses.csv to your GitHub repo."""
+    try:
+        token = st.secrets["github"]["token"]
+        repo_name = st.secrets["github"]["repo"]
+        username = st.secrets["github"]["username"]
+        g = Github(token)
+        repo = g.get_repo(repo_name)
+
+        # Read file contents
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        # Check if file already exists in repo
+        try:
+            file = repo.get_contents(file_path)
+            repo.update_file(
+                path=file_path,
+                message=f"Update responses.csv - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                content=content,
+                sha=file.sha
+            )
+        except Exception:
+            repo.create_file(
+                path=file_path,
+                message=f"Add responses.csv - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+                content=content
+            )
+
+        st.success("☁️ Data successfully backed up to GitHub repository.")
+    except Exception as e:
+        st.warning(f"⚠️ Backup to GitHub failed: {e}")
+
 
 # --------------------------------------------------
 # Intro
@@ -220,51 +256,35 @@ elif st.session_state.page == "image_tasks":
     all_images = [
         ("image1.jpg", "Cooking caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
-            "Cooking is an art — tasting is quality control.",
-            "A pinch of patience, a dash of curiosity, and one very big spoon.",
-            "Some measure ingredients — others measure by instinct."
+            "Cooking is an art — tasting is quality control."
         ]),
         ("image2.jpg", "1920s party scene captions", [
             "When the champagne hits before the Roaring Twenties end.",
-            "Pour decisions make the best memories.",
-            "1920s group chat: ‘Who’s bringing the chaos?",
-            "The original bottomless brunch squad."
+            "Pour decisions make the best memories."
         ]),
         ("image3.jpg", "Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
-            "Before smartphones, there were these warriors of the lens.",
-            "Where the flash is brighter than the fame.",
-            "A thousand flashes, one perfect shot."
+            "Before smartphones, there were these warriors of the lens."
         ]),
         ("image4.jpg", "3D movie reaction captions", [
             "When 3D movies were too real.",
-            "Immersive cinema before VR was even a dream.",
-            "Cinematic innovation meets group panic.",
-            "They said it would be a thrilling experience. They weren’t kidding." 
+            "Immersive cinema before VR was even a dream."
         ]),
         ("image5.jpg", "Bubble party captions", [
             "When the bubble gun steals the show.",
-            "POV: The party just hit its peak.",
-            "When the night’s so good, even the bubbles are vibing.",
-            "Caught mid-bubble, mid-laugh, mid-perfect memory."
+            "POV: The party just hit its peak."
         ]),
         ("image6.jpg", "Mountain hiking captions", [
             "Every trail leads to a story worth telling.",
-            "Adventure begins at the edge of your comfort zone.",
-            "Keep climbing—every step builds strength, every view builds peace.",
-            "Leave nothing but footprints, take nothing but perspective."
+            "Adventure begins at the edge of your comfort zone."
         ]),
         ("image7.jpg", "Brainstorming teamwork captions", [
             "Collaboration in action: where ideas come alive in color.",
-            "Teamwork is the art of turning many thoughts into one vision.",
-            "Every sketch, scribble, and sentence brings the goal closer.",
-            "Innovation starts with a table full of ideas and open minds."
+            "Teamwork is the art of turning many thoughts into one vision."
         ]),
         ("image8.jpg", "Funny science classroom captions", [
             "When your financial plan is pure wizardry.",
-            "Inflation, but make it magical.",
-            "Turning student debt into smoke — if only it were that easy.",
-            "Don’t worry, it’s just a demonstration!’ — famous last words."
+            "Inflation, but make it magical."
         ])
     ]
 
@@ -315,7 +335,7 @@ elif st.session_state.page == "image_tasks":
         st.rerun()
 
 # --------------------------------------------------
-# E. Final Reflection (moved here)
+# E. Final Reflection
 # --------------------------------------------------
 elif st.session_state.page == "post_reflection":
     st.header("🧩 Post-Survey Reflection")
@@ -334,23 +354,35 @@ elif st.session_state.page == "post_reflection":
         st.rerun()
 
 # --------------------------------------------------
-# F. End Page
+# F. End Page (GitHub Sync + Admin-only Download)
 # --------------------------------------------------
 elif st.session_state.page == "done":
     st.balloons()
     st.header("✅ Survey Complete")
-    st.success("Thank you! Your responses have been saved.")
+    st.success("Thank you! Your responses have been saved and backed up.")
 
-    df = load_responses()
-    if len(df) > 0:
-        csv_data = df.to_csv(index=False).encode("utf-8")
-        st.download_button(
-            label="📥 Download responses.csv",
-            data=csv_data,
-            file_name="responses.csv",
-            mime="text/csv"
-        )
-        st.info("ℹ️ The app keeps appending new submissions to responses.csv until redeployed. "
-                "Download regularly for backup.")
-    else:
-        st.info("No responses recorded yet.")
+    file_path = "responses.csv"
+    if os.path.exists(file_path):
+        push_to_github(file_path)
+
+    # Admin-only download section
+    st.markdown("### 👩‍💼 Admin Access (Researcher Only)")
+    admin_key = st.text_input("Enter admin passcode:", type="password")
+
+    ADMIN_PASSWORD = "mySecretKey123"  # change this!
+
+    if admin_key == ADMIN_PASSWORD:
+        st.success("🔐 Admin verified.")
+        df = load_responses()
+        if len(df) > 0:
+            csv_data = df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="📥 Download responses.csv",
+                data=csv_data,
+                file_name="responses.csv",
+                mime="text/csv"
+            )
+        else:
+            st.info("No responses recorded yet.")
+    elif admin_key:
+        st.error("❌ Incorrect passcode. Access denied.")
