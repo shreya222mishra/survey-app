@@ -270,7 +270,7 @@ elif st.session_state.page == "text_tasks":
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
-    # Each tuple: (filename, label, example captions)
+    # List of images: (filename, label, ai_examples)
     all_images = [
         ("image1.jpg", "Relatable caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
@@ -298,10 +298,11 @@ elif st.session_state.page == "image_tasks":
         ])
     ]
 
-    # Fixed round order (No-AI → AI-first → Human-first), but shuffled image order
+    # Fixed round order (No-AI → AI-first → Human-first)
+    # Shuffle only which images appear in each round
     if not st.session_state.image_condition_map:
         random.shuffle(all_images)
-        image_pairs = [all_images[i:i+2] for i in range(0, 6, 2)]
+        image_pairs = [all_images[i:i + 2] for i in range(0, 6, 2)]
         st.session_state.image_condition_map = [
             ("No-AI", image_pairs[0]),
             ("AI-first", image_pairs[1]),
@@ -313,28 +314,25 @@ elif st.session_state.page == "image_tasks":
         condition, image_pair = st.session_state.image_condition_map[img_round]
         st.subheader(f"Round {img_round + 1}: Condition = {condition}")
 
-        # Unified column name (e.g. no_ai_image_caption)
+        # unified column key (no_ai_image_caption, ai_first_image_caption, human_first_image_caption)
         base_key = condition.lower().replace("-", "_") + "_image_caption"
         captions_combined = []
 
         for img_file, label, ai_examples in image_pair:
             st.markdown(f"### {label}")
 
-            # ✅ Try both same-folder and /images subfolder (proper indentation)
-        base_dir = Path(__file__).parent
-        image_path = base_dir / img_file
-        if not image_path.exists():
-            image_path = base_dir / "images" / img_file
+            # ✅ Load image from current folder or /images subfolder
+            base_dir = Path(__file__).parent
+            image_path = base_dir / img_file
+            if not image_path.exists():
+                image_path = base_dir / "images" / img_file
 
-        if image_path.exists():
-              st.image(str(image_path), caption=label, use_column_width=True)
-        else:
-              st.warning(f"⚠️ Image file '{img_file}' not found in app directory or /images folder.")
+            if image_path.exists():
+                st.image(str(image_path), caption=label, use_column_width=True)
+            else:
+                st.warning(f"⚠️ Image file '{img_file}' not found in app directory or /images folder.")
 
-
-
-
-            # --- Handle task input ---
+            # ---- Input section per condition ----
             if condition == "No-AI":
                 st.markdown("_Write your own caption(s) for this image._")
                 cap = st.text_area("Your caption:", key=f"{img_file}_text")
@@ -349,22 +347,31 @@ elif st.session_state.page == "image_tasks":
             else:  # Human-first
                 st.markdown("_Write your own caption(s) first._")
                 cap = st.text_area("Your caption:", key=f"{img_file}_text")
+
                 if cap.strip():
                     st.markdown("### Example AI Captions")
                     for c in ai_examples:
                         st.write("-", c)
+
                     st.markdown("**Would you like to revise your caption based on these AI examples?**")
-                    improve_choice = st.radio("Select one:", ["No", "Yes"], index=0,
-                                              horizontal=True, key=f"{img_file}_improve")
+                    improve_choice = st.radio(
+                        "Select one:", ["No", "Yes"],
+                        index=0, horizontal=True, key=f"{img_file}_improve"
+                    )
+
                     revised_text = ""
                     if improve_choice == "Yes":
-                        revised_text = st.text_area("Revise your caption below:", key=f"{img_file}_revised")
+                        revised_text = st.text_area(
+                            "Revise your caption below:", key=f"{img_file}_revised"
+                        )
+
                     st.session_state.responses[f"{base_key}_improved"] = improve_choice
                     st.session_state.responses[f"{base_key}_revised"] = revised_text
 
+            # store this caption + label
             captions_combined.append(f"{label} — {cap}")
 
-        # Save all captions in a single unified field
+        # save combined captions in one column
         st.session_state.responses[base_key] = " | ".join(captions_combined)
 
         if st.button("Next ➡️"):
@@ -373,6 +380,7 @@ elif st.session_state.page == "image_tasks":
     else:
         st.session_state.page = "post_reflection"
         st.rerun()
+
 
 # --------------------------------------------------
 # E. Final Reflection
