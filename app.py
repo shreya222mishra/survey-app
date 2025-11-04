@@ -233,12 +233,12 @@ elif st.session_state.page == "text_tasks":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            st.markdown("_Now write your own headline inspired by the above._")
+            st.markdown("_Invent an eye-catching headline inspired by the above._")
             user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
             st.session_state.responses[user_key] = user_text
 
         else:  # Human-first
-            st.markdown("_Write first, then see AI examples._")
+            st.markdown("_Come up with a catchy headline, then see AI examples._")
             user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
             st.session_state.responses[user_key] = user_text
 
@@ -283,11 +283,11 @@ elif st.session_state.page == "image_tasks":
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories."
         ]),
-        ("image3.jpg", "Photographers with cameras captions", [
+        ("image3.jpg", "Witty caption ideas", [
             "Smile! You’re making tomorrow’s headlines.",
             "Before smartphones, there were these warriors of the lens."
         ]),
-        ("image4.jpg", "3D movie reaction captions", [
+        ("image4.jpg", "Nostalgic caption ideas", [
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream."
         ]),
