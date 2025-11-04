@@ -271,58 +271,33 @@ elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
     all_images = [
-        ("Relatable", [
+        ("Relatable caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
-            "Cooking is an art — tasting is quality control.",
-            "When in doubt, taste it out.",
-            "Flavors don’t guess themselves.",
-            "Behind every great dish is a chef who refuses to follow the recipe exactly."  ]),
-        ("Playful", [
+            "Cooking is an art — tasting is quality control."
+        ]),
+        ("Playful caption ideas", [
             "When the champagne hits before the Roaring Twenties end.",
-            "Pour decisions make the best memories.",
-            "1920s group chat: ‘Who’s bringing the chaos?",
-            "Pour decisions make the best memories.",
-            "Standing on tables since before it was an Instagram trend.",
-            "Proof that girls’ night has always been iconic."
-
+            "Pour decisions make the best memories."
         ]),
-        ("Witty", [
+        ("Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
-            "Before smartphones, there were these warriors of the lens.",
-            "Say cheese—or say scandal.",
-            "A thousand flashes, one perfect shot.",
-            "Behind every headline is a crowd with cameras.",
-            "The paparazzi Olympics: may the fastest shutter win."
-
+            "Before smartphones, there were these warriors of the lens."
         ]),
-        ("Nostalgic", [
+        ("3D movie reaction captions", [
             "When 3D movies were too real.",
-            "Immersive cinema before VR was even a dream.",
-            "When the movie jumps out—and so do your screams.",
-            "Proof that audiences have always been dramatic.",
-            "Cinematic innovation meets group panic.",
-            "They said it would be a thrilling experience. They weren’t kidding."
-
+            "Immersive cinema before VR was even a dream."
         ]),
-        ("Celebration", [
+        ("Celebration caption ideas", [
             "When the bubble gun steals the show.",
-            "POV: The party just hit its peak.",
-            "Caught mid-bubble, mid-laugh, mid-perfect memory.",
-            "No confetti? No problem — we’ve got bubbles and bad dance moves.",
-            "Because nothing says ‘celebration’ like bubbles and besties."
-
+            "POV: The party just hit its peak."
         ]),
-        ("Inspirational", [
+        ("Inspirational caption ideas", [
             "Every trail leads to a story worth telling.",
-            "Adventure begins at the edge of your comfort zone.",
-            "Leave nothing but footprints, take nothing but perspective.",
-            "Not all who wander are lost—some are just finding themselves.",
-            "The path may be steep, but the view makes it worth it.",
-            "Chasing horizons, one trail at a time."
-
+            "Adventure begins at the edge of your comfort zone."
         ])
     ]
 
+    # Fixed round order (No-AI → AI-first → Human-first), shuffled image sets
     if not st.session_state.image_condition_map:
         random.shuffle(all_images)
         image_pairs = [all_images[i:i+2] for i in range(0, 6, 2)]
@@ -337,35 +312,49 @@ elif st.session_state.page == "image_tasks":
         condition, image_pair = st.session_state.image_condition_map[img_round]
         st.subheader(f"Round {img_round + 1}: Condition = {condition}")
 
+        # Use unified column name like no_ai_image_caption, ai_first_image_caption, etc.
         base_key = condition.lower().replace("-", "_") + "_image_caption"
         captions_combined = []
 
         for name, ais in image_pair:
             st.markdown(f"### {name}")
 
+            # No-AI condition
             if condition == "No-AI":
+                st.markdown("_Write your own caption(s) for this image._")
                 cap = st.text_area("Your caption:", key=f"{name}_text")
+
+            # AI-first condition
             elif condition == "AI-first":
                 st.markdown("**Example AI Captions**")
                 for c in ais:
                     st.write("-", c)
+                st.markdown("_Now write your own caption(s) inspired by the above._")
                 cap = st.text_area("Your caption:", key=f"{name}_text")
+
+            # Human-first condition
             else:
+                st.markdown("_Write your own caption(s) first._")
                 cap = st.text_area("Your caption:", key=f"{name}_text")
                 if cap.strip():
                     st.markdown("### Example AI Captions")
                     for c in ais:
                         st.write("-", c)
-                    improve_choice = st.radio("Would you like to revise your caption?",
-                                              ["No", "Yes"], index=0, horizontal=True,
-                                              key=f"{name}_improve")
+                    st.markdown("**Would you like to revise your caption based on these AI examples?**")
+                    improve_choice = st.radio("Select one:", ["No", "Yes"], index=0,
+                                              horizontal=True, key=f"{name}_improve")
                     revised_text = ""
                     if improve_choice == "Yes":
                         revised_text = st.text_area("Revise your caption below:", key=f"{name}_revised")
                     st.session_state.responses[f"{base_key}_improved"] = improve_choice
                     st.session_state.responses[f"{base_key}_revised"] = revised_text
+                else:
+                    st.info("✏️ Please write a caption before continuing.")
+
+            # Combine label + caption text for CSV clarity
             captions_combined.append(f"{name} — {cap}")
 
+        # Save both captions for this round in one unified column
         st.session_state.responses[base_key] = " | ".join(captions_combined)
 
         if st.button("Next ➡️"):
