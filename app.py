@@ -11,7 +11,7 @@ st.set_page_config(page_title="AI Creativity and Idea Generation Survey", layout
 st.title("🧠 AI Creativity and Idea Generation Survey")
 
 # --------------------------------------------------
-# Initialize Session State
+# Initialize Session
 # --------------------------------------------------
 if "page" not in st.session_state:
     st.session_state.page = "intro"
@@ -23,7 +23,7 @@ if "condition_map" not in st.session_state:
     st.session_state.condition_map = []
 
 # --------------------------------------------------
-# Helper Functions
+# Helpers
 # --------------------------------------------------
 def save_response(data):
     file_exists = os.path.isfile("responses.csv")
@@ -96,7 +96,7 @@ elif st.session_state.page == "ai_familiarity":
         st.session_state.responses.update(likerts)
         st.session_state.page = "text_tasks"
         st.text_round = 0
-        st.condition_map = []  # reset condition mapping
+        st.condition_map = []  # reset mapping
         st.rerun()
 
 # --------------------------------------------------
@@ -133,7 +133,7 @@ elif st.session_state.page == "text_tasks":
         }
     }
 
-    # Build random condition ↔ category mapping once
+    # Randomized condition ↔ category mapping
     if not st.session_state.condition_map:
         topics = random.sample(list(briefs.keys()), 3)
         conditions = ["No-AI", "AI-first", "Human-first"]
@@ -178,18 +178,33 @@ elif st.session_state.page == "text_tasks":
             st.markdown("_Please write your own headlines first._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
 
-            # Reveal AI only after user input
             if user_text.strip():
                 st.markdown("### Example AI Headlines")
                 for h in content["ai"]:
                     st.write("-", h)
-                st.markdown("_You may revise your ideas after viewing the AI examples._")
 
-            st.session_state.responses[user_key] = user_text
-            if user_text.strip() and st.button("Next ➡️"):
-                st.session_state.text_round += 1
-                st.rerun()
-            elif not user_text.strip():
+                st.markdown("**Do you think you could improve your ideas based on these AI examples?**")
+                improve_choice = st.radio(
+                    "Select one:", ["No", "Yes"],
+                    index=0, horizontal=True, key=f"{current_category}_improve"
+                )
+
+                revised_text = ""
+                if improve_choice == "Yes":
+                    revised_text = st.text_area(
+                        "Revise your headlines below:",
+                        key=f"{current_category}_revised"
+                    )
+
+                # Save responses
+                st.session_state.responses[user_key] = user_text
+                st.session_state.responses[f"{current_category}_improved"] = improve_choice
+                st.session_state.responses[f"{current_category}_revised_text"] = revised_text
+
+                if st.button("Next ➡️"):
+                    st.session_state.text_round += 1
+                    st.rerun()
+            else:
                 st.info("✏️ Please enter your headlines before proceeding.")
 
     # ---------- Post-survey after all rounds ----------
