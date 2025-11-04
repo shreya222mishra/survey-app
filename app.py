@@ -30,25 +30,27 @@ if "image_condition_map" not in st.session_state:
 # Helpers
 # --------------------------------------------------
 def save_response(data):
-    """Append survey result as a row in responses.csv"""
+    """Append a participant's responses safely with quoting."""
     df_new = pd.DataFrame([data])
     file_path = "responses.csv"
-
-    # Append if exists; create if not
     if os.path.exists(file_path):
-        df_new.to_csv(file_path, mode="a", index=False, header=False, encoding="utf-8")
+        df_new.to_csv(file_path, mode="a", index=False, header=False,
+                      encoding="utf-8", quoting=csv.QUOTE_ALL)
     else:
-        df_new.to_csv(file_path, mode="w", index=False, header=True, encoding="utf-8")
+        df_new.to_csv(file_path, mode="w", index=False, header=True,
+                      encoding="utf-8", quoting=csv.QUOTE_ALL)
 
 
 def load_responses():
-    """Load previous responses"""
+    """Safely load previous responses; auto-backup if file is malformed."""
     file_path = "responses.csv"
     if os.path.exists(file_path):
         try:
             return pd.read_csv(file_path)
         except Exception as e:
-            st.warning(f"⚠️ Could not read existing responses: {e}")
+            backup_name = f"responses_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            os.rename(file_path, backup_name)
+            st.warning(f"⚠️ responses.csv was inconsistent and has been backed up as {backup_name}. A new file has been created.")
             return pd.DataFrame()
     return pd.DataFrame()
 
@@ -204,18 +206,13 @@ elif st.session_state.page == "text_tasks":
                 st.info("✏️ Please enter your headlines before proceeding.")
 
     else:
-        st.subheader("Post-Survey: Reflect on the Text Generation Task")
-        st.session_state.responses["overall_trust"] = st.slider("Overall, I trusted the AI suggestions.", 1, 5, 3)
-        st.session_state.responses["overall_original"] = st.slider("Overall, my ideas felt original.", 1, 5, 3)
-        st.session_state.responses["overall_fixation"] = st.slider("It was hard to think beyond the AI’s ideas.", 1, 5, 3)
-        if st.button("Next ➡️"):
-            st.session_state.page = "image_tasks"
-            st.image_round = 0
-            st.image_condition_map = []
-            st.rerun()
+        st.session_state.page = "image_tasks"
+        st.image_round = 0
+        st.image_condition_map = []
+        st.rerun()
 
 # --------------------------------------------------
-# D. Image Caption Tasks (Counterbalanced)
+# D. Image Caption Tasks
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
@@ -255,7 +252,6 @@ elif st.session_state.page == "image_tasks":
         ])
     ]
 
-    # Randomize pairs once
     if not st.session_state.image_condition_map:
         random.shuffle(all_images)
         image_pairs = [all_images[i:i+2] for i in range(0, 6, 2)]
@@ -282,7 +278,7 @@ elif st.session_state.page == "image_tasks":
                 st.markdown("**Example AI Captions**")
                 for c in ais: st.write("-", c)
                 cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
-            else:  # Human-first
+            else:
                 cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
                 if cap.strip():
                     st.markdown("**Example AI Captions**")
@@ -298,23 +294,37 @@ elif st.session_state.page == "image_tasks":
         if st.button("Next ➡️"):
             st.session_state.image_round += 1
             st.rerun()
-
     else:
-        if st.button("Finish Survey ✅"):
-            st.session_state.responses["timestamp_end"] = datetime.now().isoformat()
-            save_response(st.session_state.responses)
-            st.session_state.page = "done"
-            st.rerun()
+        st.session_state.page = "post_reflection"
+        st.rerun()
 
 # --------------------------------------------------
-# End Page
+# E. Final Reflection (moved here)
+# --------------------------------------------------
+elif st.session_state.page == "post_reflection":
+    st.header("🧩 Post-Survey Reflection")
+    st.markdown("Rate your overall experience across all text and image rounds (1–5):")
+    st.session_state.responses["overall_trust"] = st.slider(
+        "Overall, I trusted the AI suggestions.", 1, 5, 3)
+    st.session_state.responses["overall_original"] = st.slider(
+        "Overall, my ideas felt original.", 1, 5, 3)
+    st.session_state.responses["overall_fixation"] = st.slider(
+        "It was hard to think beyond the AI’s ideas.", 1, 5, 3)
+
+    if st.button("Finish Survey ✅"):
+        st.session_state.responses["timestamp_end"] = datetime.now().isoformat()
+        save_response(st.session_state.responses)
+        st.session_state.page = "done"
+        st.rerun()
+
+# --------------------------------------------------
+# F. End Page
 # --------------------------------------------------
 elif st.session_state.page == "done":
     st.balloons()
     st.header("✅ Survey Complete")
     st.success("Thank you! Your responses have been saved.")
 
-    st.markdown("### 📊 Download All Responses")
     df = load_responses()
     if len(df) > 0:
         csv_data = df.to_csv(index=False).encode("utf-8")
@@ -324,6 +334,7 @@ elif st.session_state.page == "done":
             file_name="responses.csv",
             mime="text/csv"
         )
-        st.info("ℹ️ The app keeps appending new submissions to responses.csv until redeployed. Please download regularly for backup.")
+        st.info("ℹ️ The app keeps appending new submissions to responses.csv until redeployed. "
+                "Download regularly for backup.")
     else:
         st.info("No responses recorded yet.")
