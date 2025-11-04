@@ -11,7 +11,7 @@ st.set_page_config(page_title="AI Creativity and Idea Generation Survey", layout
 st.title("🧠 AI Creativity and Idea Generation Survey")
 
 # --------------------------------------------------
-# Initialize Session
+# Initialize Session State
 # --------------------------------------------------
 if "page" not in st.session_state:
     st.session_state.page = "intro"
@@ -19,11 +19,11 @@ if "responses" not in st.session_state:
     st.session_state.responses = {}
 if "text_round" not in st.session_state:
     st.session_state.text_round = 0
-if "category_order" not in st.session_state:
-    st.session_state.category_order = []
+if "condition_map" not in st.session_state:
+    st.session_state.condition_map = []
 
 # --------------------------------------------------
-# Helpers
+# Helper Functions
 # --------------------------------------------------
 def save_response(data):
     file_exists = os.path.isfile("responses.csv")
@@ -95,12 +95,12 @@ elif st.session_state.page == "ai_familiarity":
     if st.button("Next ➡️"):
         st.session_state.responses.update(likerts)
         st.session_state.page = "text_tasks"
-        st.category_order = []
         st.text_round = 0
+        st.condition_map = []  # reset condition mapping
         st.rerun()
 
 # --------------------------------------------------
-# C. Text Generation (3 rounds randomized)
+# C. Text Generation (Counterbalanced 3 Rounds)
 # --------------------------------------------------
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
@@ -133,22 +133,22 @@ elif st.session_state.page == "text_tasks":
         }
     }
 
-    # Randomize categories once
-    if not st.session_state.category_order:
-        st.session_state.category_order = random.sample(list(briefs.keys()), 3)
+    # Build random condition ↔ category mapping once
+    if not st.session_state.condition_map:
+        topics = random.sample(list(briefs.keys()), 3)
+        conditions = ["No-AI", "AI-first", "Human-first"]
+        st.session_state.condition_map = list(zip(conditions, topics))
 
-    categories = st.session_state.category_order
     round_idx = st.session_state.text_round
-    round_conditions = ["No-AI", "AI-first", "Human-first"]
-
     if round_idx < 3:
-        current_category = categories[round_idx]
-        condition = round_conditions[round_idx]
+        condition, current_category = st.session_state.condition_map[round_idx]
         content = briefs[current_category]
-        st.subheader(f"Round {round_idx+1}: {current_category}")
+
+        st.subheader(f"Round {round_idx + 1}: {current_category}")
         st.write("**Brief:**", content["brief"])
         user_key = f"{current_category}_response"
 
+        # ---------- Round 1: No-AI ----------
         if condition == "No-AI":
             st.markdown("_Please write your own headlines for this brief._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
@@ -159,6 +159,7 @@ elif st.session_state.page == "text_tasks":
             elif not user_text.strip():
                 st.info("✏️ Please enter your headlines before proceeding.")
 
+        # ---------- Round 2: AI-first ----------
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
@@ -172,11 +173,12 @@ elif st.session_state.page == "text_tasks":
             elif not user_text.strip():
                 st.info("✏️ Please enter your headlines before proceeding.")
 
-        else:  # Human-first
+        # ---------- Round 3: Human-first ----------
+        else:
             st.markdown("_Please write your own headlines first._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
 
-            # Reveal AI suggestions only after input
+            # Reveal AI only after user input
             if user_text.strip():
                 st.markdown("### Example AI Headlines")
                 for h in content["ai"]:
@@ -190,6 +192,7 @@ elif st.session_state.page == "text_tasks":
             elif not user_text.strip():
                 st.info("✏️ Please enter your headlines before proceeding.")
 
+    # ---------- Post-survey after all rounds ----------
     else:
         st.subheader("Post-Survey: Reflect on the Text Generation Task")
         st.markdown("Rate your overall experience across all three rounds (1–5):")
@@ -242,7 +245,7 @@ elif st.session_state.page == "image_tasks":
         ])
     ]
 
-    cond = random.choice(["AI-first", "Human-first", "No-AI"])  # Random per participant
+    cond = random.choice(["AI-first", "Human-first", "No-AI"])
     for img, name, ais in image_sets:
         st.subheader(name)
         image_path = Path(__file__).parent / img
