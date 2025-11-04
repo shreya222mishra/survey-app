@@ -320,16 +320,17 @@ elif st.session_state.page == "image_tasks":
         for img_file, label, ai_examples in image_pair:
             st.markdown(f"### {label}")
 
-            # ✅ Try both same-folder and /images subfolder
-base_dir = Path(__file__).parent
-image_path = base_dir / img_file
-if not image_path.exists():
-    image_path = base_dir / "images" / img_file
+            # ✅ Try both same-folder and /images subfolder (proper indentation)
+        base_dir = Path(__file__).parent
+        image_path = base_dir / img_file
+        if not image_path.exists():
+            image_path = base_dir / "images" / img_file
 
-if image_path.exists():
-    st.image(str(image_path), caption=label, use_column_width=True)
-else:
-    st.warning(f"⚠️ Image file '{img_file}' not found in app directory or /images folder.")
+        if image_path.exists():
+              st.image(str(image_path), caption=label, use_column_width=True)
+        else:
+              st.warning(f"⚠️ Image file '{img_file}' not found in app directory or /images folder.")
+
 
 
 
