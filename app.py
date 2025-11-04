@@ -1,6 +1,7 @@
 import streamlit as st
 import random, time, csv, os
 from datetime import datetime
+import pandas as pd
 
 st.set_page_config(page_title="AI Creativity Survey", layout="wide")
 st.title("🧠 AI Creativity and Idea Generation Survey")
@@ -25,6 +26,16 @@ def save_response(data):
         if not file_exists:
             writer.writeheader()
         writer.writerow(data)
+
+# --------------------------------------------------
+# Helper to load responses for download
+# --------------------------------------------------
+def load_responses():
+    if os.path.exists("responses.csv"):
+        df = pd.read_csv("responses.csv")
+        return df
+    else:
+        return pd.DataFrame()
 
 # --------------------------------------------------
 # Intro / Consent
@@ -126,7 +137,6 @@ elif st.session_state.page == "text_tasks":
         st.write("**Brief:**", content["brief"])
         cond = st.session_state.condition
         user_key = f"{topic}_response"
-        ai_key = f"{topic}_ai_seen"
         if cond=="AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
@@ -160,38 +170,31 @@ elif st.session_state.page == "image_tasks":
         ("image_1.jpg","Cooking caption ideas",[
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control.",
-            "When in doubt, taste it out.",
-            "Some measure ingredients — others measure by instinct."
+            "When in doubt, taste it out."
         ]),
         ("image_2.jpg","1920s party scene captions",[
             "When the champagne hits before the Roaring Twenties end.",
-            "Table manners? Never heard of her.",
             "Pour decisions make the best memories."
         ]),
         ("image_3.jpg","Photographers with cameras captions",[
             "Smile! You’re making tomorrow’s headlines.",
-            "Before smartphones, there were these warriors of the lens.",
-            "A thousand flashes, one perfect shot."
+            "Before smartphones, there were these warriors of the lens."
         ]),
         ("image_4.jpg","3D movie reaction captions",[
             "When 3D movies were too real.",
-            "Immersive cinema before VR was even a dream.",
-            "The original jump-scare reaction video."
+            "Immersive cinema before VR was even a dream."
         ]),
         ("image_5.jpg","Bubble party captions",[
             "When the bubble gun steals the show.",
-            "Proof that the best parties end with bubbles and chaos.",
             "POV: The party just hit its peak."
         ]),
         ("image_6.jpg","Mountain hiking captions",[
             "Every trail leads to a story worth telling.",
-            "Step by step, the mountains become memories.",
             "Adventure begins at the edge of your comfort zone."
         ]),
         ("image_7.jpg","Brainstorming teamwork captions",[
             "Collaboration in action: where ideas come alive in color.",
-            "Teamwork is the art of turning many thoughts into one vision.",
-            "Great things happen when minds meet and markers flow."
+            "Teamwork is the art of turning many thoughts into one vision."
         ])
     ]
 
@@ -218,7 +221,6 @@ elif st.session_state.page == "image_tasks":
     if st.button("Finish Survey ✅"):
         st.session_state.responses["timestamp_end"] = datetime.now().isoformat()
         save_response(st.session_state.responses)
-        st.success("Thank you! Your responses have been saved.")
         st.session_state.page = "done"
         st.experimental_rerun()
 
@@ -227,4 +229,19 @@ elif st.session_state.page == "image_tasks":
 # --------------------------------------------------
 elif st.session_state.page == "done":
     st.balloons()
-    st.write("✅ Survey complete. You may now close this tab.")
+    st.header("✅ Survey Complete")
+    st.success("Thank you! Your responses have been saved.")
+
+    # Download section
+    st.markdown("### 📊 Download All Responses")
+    df = load_responses()
+    if len(df) > 0:
+        csv_data = df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="Download responses.csv",
+            data=csv_data,
+            file_name="responses.csv",
+            mime="text/csv"
+        )
+    else:
+        st.info("No responses recorded yet.")
