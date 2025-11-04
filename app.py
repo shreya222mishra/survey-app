@@ -221,50 +221,50 @@ elif st.session_state.page == "image_tasks":
         ("image1.jpg", "Cooking caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control.",
-            “A pinch of patience, a dash of curiosity, and one very big spoon.”,
-            “Some measure ingredients — others measure by instinct.”
+            "A pinch of patience, a dash of curiosity, and one very big spoon.",
+            "Some measure ingredients — others measure by instinct."
         ]),
         ("image2.jpg", "1920s party scene captions", [
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories.",
-            “1920s group chat: ‘Who’s bringing the chaos?",
-            “The original bottomless brunch squad.”
+            "1920s group chat: ‘Who’s bringing the chaos?",
+            "The original bottomless brunch squad."
         ]),
         ("image3.jpg", "Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
             "Before smartphones, there were these warriors of the lens.",
-            “Where the flash is brighter than the fame.”,
-            “A thousand flashes, one perfect shot.”
+            "Where the flash is brighter than the fame.",
+            "A thousand flashes, one perfect shot."
         ]),
         ("image4.jpg", "3D movie reaction captions", [
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream.",
-            “Cinematic innovation meets group panic.”,
-            “They said it would be a thrilling experience. They weren’t kidding.” 
+            "Cinematic innovation meets group panic.",
+            "They said it would be a thrilling experience. They weren’t kidding." 
         ]),
         ("image5.jpg", "Bubble party captions", [
             "When the bubble gun steals the show.",
             "POV: The party just hit its peak.",
-            “When the night’s so good, even the bubbles are vibing.”,
-            “Caught mid-bubble, mid-laugh, mid-perfect memory.”
+            "When the night’s so good, even the bubbles are vibing.",
+            "Caught mid-bubble, mid-laugh, mid-perfect memory."
         ]),
         ("image6.jpg", "Mountain hiking captions", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone.",
-            “Keep climbing—every step builds strength, every view builds peace.”,
-            “Leave nothing but footprints, take nothing but perspective.”
+            "Keep climbing—every step builds strength, every view builds peace.",
+            "Leave nothing but footprints, take nothing but perspective."
         ]),
         ("image7.jpg", "Brainstorming teamwork captions", [
             "Collaboration in action: where ideas come alive in color.",
             "Teamwork is the art of turning many thoughts into one vision.",
-            “Every sketch, scribble, and sentence brings the goal closer.”,
-            “Innovation starts with a table full of ideas and open minds.”
+            "Every sketch, scribble, and sentence brings the goal closer.",
+            "Innovation starts with a table full of ideas and open minds."
         ]),
         ("image8.jpg", "Funny science classroom captions", [
             "When your financial plan is pure wizardry.",
             "Inflation, but make it magical.",
-            “Turning student debt into smoke — if only it were that easy.”,
-            “Don’t worry, it’s just a demonstration!’ — famous last words.”
+            "Turning student debt into smoke — if only it were that easy.",
+            "Don’t worry, it’s just a demonstration!’ — famous last words."
         ])
     ]
 
