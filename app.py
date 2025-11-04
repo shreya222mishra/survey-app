@@ -144,7 +144,7 @@ elif st.session_state.page == "ai_familiarity":
         st.rerun()
 
 # --------------------------------------------------
-# C. Text Generation (Unified Columns)
+# C. Text Generation (Counterbalanced)
 # --------------------------------------------------
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
@@ -203,24 +203,23 @@ elif st.session_state.page == "text_tasks":
         st.subheader(f"Round {round_idx + 1}: {current_category}")
         st.write("**Brief:**", content["brief"])
 
+        # 🟩 Assign fixed column names
         if condition == "No-AI":
-            user_text = st.text_area("Write your headline:", key="no_ai_text")
-            st.session_state.responses["no_ai_text"] = user_text
+            st.markdown("_Compose a striking headline for this brief._")
+            user_text = st.text_area("Write your headline:", key=f"no_ai_text_{round_idx}")
+            st.session_state.responses[f"no_ai_text_round_{round_idx+1}"] = user_text
 
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            user_text = st.text_area("Write your headline:", key="with_ai_text")
-            st.session_state.responses["with_ai_text"] = user_text
+            user_text = st.text_area("Write your headline:", key=f"with_ai_text_{round_idx}")
+            st.session_state.responses[f"with_ai_text_round_{round_idx+1}"] = user_text
 
-        else:  # Human-first
-            user_text = st.text_area("Write your headline:", key="human_first_text")
-            if user_text.strip():
-                st.markdown("### Example AI Headlines")
-                for h in content["ai"]:
-                    st.write("-", h)
-            st.session_state.responses["human_first_text"] = user_text
+        else:
+            st.markdown("_Give this story a headline with flair._")
+            user_text = st.text_area("Write your headline:", key=f"human_first_text_{round_idx}")
+            st.session_state.responses[f"human_first_text_round_{round_idx+1}"] = user_text
 
         if user_text.strip() and st.button("Next ➡️"):
             st.session_state.text_round += 1
@@ -233,17 +232,17 @@ elif st.session_state.page == "text_tasks":
         st.rerun()
 
 # --------------------------------------------------
-# D. Image Caption Tasks (Unified Columns)
+# D. Image Caption Tasks (same naming logic)
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
     all_images = [
-        ("image1.jpg", "Cooking caption ideas", [
+        ("image1.jpg", "Relatable caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control."
         ]),
-        ("image2.jpg", "1920s party scene captions", [
+        ("image2.jpg", "Playful caption ideas", [
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories."
         ]),
@@ -255,11 +254,11 @@ elif st.session_state.page == "image_tasks":
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream."
         ]),
-        ("image5.jpg", "Bubble party captions", [
+        ("image5.jpg", "Celebration caption ideas", [
             "When the bubble gun steals the show.",
             "POV: The party just hit its peak."
         ]),
-        ("image6.jpg", "Mountain hiking captions", [
+        ("image6.jpg", "Inspirational caption ideas", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone."
         ])
@@ -284,14 +283,14 @@ elif st.session_state.page == "image_tasks":
 
             key_prefix = ""
             if condition == "No-AI":
-                key_prefix = f"no_ai_image{idx}"
+                key_prefix = "no_ai"
             elif condition == "AI-first":
-                key_prefix = f"with_ai_image{idx}"
+                key_prefix = "with_ai"
             else:
-                key_prefix = f"human_first_image{idx}"
+                key_prefix = "human_first"
 
-            cap = st.text_area(f"Caption for {name}:", key=key_prefix)
-            st.session_state.responses[key_prefix] = cap
+            cap = st.text_area(f"Caption for {name}:", key=f"{key_prefix}_image{idx}_round{img_round+1}")
+            st.session_state.responses[f"{key_prefix}_image{idx}_round{img_round+1}"] = cap
 
         if st.button("Next ➡️"):
             st.session_state.image_round += 1
