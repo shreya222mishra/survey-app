@@ -64,11 +64,9 @@ def push_to_github(file_path):
         g = Github(token)
         repo = g.get_repo(repo_name)
 
-        # Read file contents
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
-        # Check if file already exists in repo
         try:
             file = repo.get_contents(file_path)
             repo.update_file(
@@ -151,47 +149,47 @@ elif st.session_state.page == "ai_familiarity":
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
 
- briefs = {
-    "Science & Technology": {
-        "brief": (
-            "Researchers at a university lab have developed a new electric vehicle battery "
-            "that can fully charge in under five minutes. The innovation could drastically "
-            "reduce charging time and expand EV adoption worldwide. Automakers are already "
-            "expressing interest in commercial trials."
-        ),
-        "ai": [
-            "Breakthrough Battery Promises Ultra-Fast EV Charging",
-            "Rapid-Charge EV Battery Could Transform Electric Mobility",
-            "University Team Unveils Lightning-Fast EV Battery Tech"
-        ]
-    },
-    "Culture & Sports": {
-        "brief": (
-            "A small rural town has become the global stage for an international chess festival. "
-            "Players from over 40 countries are competing in local cafés, schools, and community centers. "
-            "The event has brought tourism, media attention, and a new sense of pride to the community."
-        ),
-        "ai": [
-            "Global Chess Festival Brings New Life to Rural Town",
-            "Quiet Town Turns Global Hub for Chess Enthusiasts",
-            "From Silence to Strategy: Chess Festival Transforms Local Community"
-        ]
-    },
-    "Health & Wellness": {
-        "brief": (
-            "A new smartphone app claims it can detect a person’s stress levels simply by analyzing voice tone and pace. "
-            "Developers say it could help users track mental health in real time. "
-            "Experts are cautiously optimistic but warn about data privacy and accuracy concerns."
-        ),
-        "ai": [
-            "AI Listens for Stress: App Tracks Mental Health Through Speech",
-            "Can Your Voice Reveal Stress? New AI App Says Yes",
-            "Smartphone App Uses AI to Measure Stress in Real Time"
-        ]
+    briefs = {
+        "Science & Technology": {
+            "brief": (
+                "Researchers at a university lab have developed a new electric vehicle battery "
+                "that can fully charge in under five minutes. The innovation could drastically "
+                "reduce charging time and expand EV adoption worldwide. Automakers are already "
+                "expressing interest in commercial trials."
+            ),
+            "ai": [
+                "Breakthrough Battery Promises Ultra-Fast EV Charging",
+                "Rapid-Charge EV Battery Could Transform Electric Mobility",
+                "University Team Unveils Lightning-Fast EV Battery Tech"
+            ]
+        },
+        "Culture & Sports": {
+            "brief": (
+                "A small rural town has become the global stage for an international chess festival. "
+                "Players from over 40 countries are competing in local cafés, schools, and community centers. "
+                "The event has brought tourism, media attention, and a new sense of pride to the community."
+            ),
+            "ai": [
+                "Global Chess Festival Brings New Life to Rural Town",
+                "Quiet Town Turns Global Hub for Chess Enthusiasts",
+                "From Silence to Strategy: Chess Festival Transforms Local Community"
+            ]
+        },
+        "Health & Wellness": {
+            "brief": (
+                "A new smartphone app claims it can detect a person’s stress levels simply by analyzing voice tone and pace. "
+                "Developers say it could help users track mental health in real time. "
+                "Experts are cautiously optimistic but warn about data privacy and accuracy concerns."
+            ),
+            "ai": [
+                "AI Listens for Stress: App Tracks Mental Health Through Speech",
+                "Can Your Voice Reveal Stress? New AI App Says Yes",
+                "Smartphone App Uses AI to Measure Stress in Real Time"
+            ]
+        }
     }
-}
 
-
+    # Randomize condition ↔ category once per participant
     if not st.session_state.condition_map:
         topics = random.sample(list(briefs.keys()), 3)
         conditions = ["No-AI", "AI-first", "Human-first"]
@@ -208,7 +206,7 @@ elif st.session_state.page == "text_tasks":
         user_key = f"{current_category}_response"
 
         if condition == "No-AI":
-            st.markdown("_Invent an eye-catching headline for this brief._")
+            st.markdown("_Please write your own headline for this brief._")
             user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
             st.session_state.responses[user_key] = user_text
             if user_text.strip() and st.button("Next ➡️"):
@@ -219,16 +217,16 @@ elif st.session_state.page == "text_tasks":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            st.markdown("_Now write a creative headline inspired by the above._")
+            st.markdown("_Now write your own headline inspired by the above._")
             user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
             st.session_state.responses[user_key] = user_text
             if user_text.strip() and st.button("Next ➡️"):
                 st.session_state.text_round += 1
                 st.rerun()
 
-        else:
-            st.markdown("_Write a punchy headline for this news brief._")
-            user_text = st.text_area("Compose a striking headline", key=f"{current_category}_text")
+        else:  # Human-first
+            st.markdown("_Please write your own headline first._")
+            user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
             if user_text.strip():
                 st.markdown("### Example AI Headlines")
                 for h in content["ai"]:
@@ -246,7 +244,7 @@ elif st.session_state.page == "text_tasks":
                     st.session_state.text_round += 1
                     st.rerun()
             else:
-                st.info("✏️ Summarize this story in a headline before proceeding.")
+                st.info("✏️ Please enter your headline before proceeding.")
 
     else:
         st.session_state.page = "image_tasks"
@@ -261,7 +259,7 @@ elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
     all_images = [
-        ("image1.jpg", "Relatable caption ideas", [
+        ("image1.jpg", "Cooking caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control."
         ]),
@@ -269,7 +267,7 @@ elif st.session_state.page == "image_tasks":
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories."
         ]),
-        ("image3.jpg", "Witty caption ideas", [
+        ("image3.jpg", "Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
             "Before smartphones, there were these warriors of the lens."
         ]),
@@ -277,15 +275,15 @@ elif st.session_state.page == "image_tasks":
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream."
         ]),
-        ("image5.jpg", "Celebration caption ideas", [
+        ("image5.jpg", "Bubble party captions", [
             "When the bubble gun steals the show.",
             "POV: The party just hit its peak."
         ]),
-        ("image6.jpg", "Motivational caption ideas", [
+        ("image6.jpg", "Mountain hiking captions", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone."
         ]),
-        ("image7.jpg", "Nostalgic caption ideas", [
+        ("image7.jpg", "Brainstorming teamwork captions", [
             "Collaboration in action: where ideas come alive in color.",
             "Teamwork is the art of turning many thoughts into one vision."
         ]),
@@ -305,7 +303,7 @@ elif st.session_state.page == "image_tasks":
     img_round = st.session_state.image_round
     if img_round < 3:
         condition, image_pair = st.session_state.image_condition_map[img_round]
-        st.subheader(f"Round {img_round + 1}")
+        st.subheader(f"Round {img_round + 1}: Condition = {condition}")
 
         for img, name, ais in image_pair:
             st.markdown(f"### {name}")
