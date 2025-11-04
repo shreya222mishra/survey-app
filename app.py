@@ -2,12 +2,16 @@ import streamlit as st
 import random, csv, os
 from datetime import datetime
 import pandas as pd
+from pathlib import Path
 
+# --------------------------------------------------
+# Page Setup
+# --------------------------------------------------
 st.set_page_config(page_title="AI Creativity Survey", layout="wide")
 st.title("🧠 AI Creativity and Idea Generation Survey")
 
 # --------------------------------------------------
-# Initialize session state
+# Initialize Session
 # --------------------------------------------------
 if "page" not in st.session_state:
     st.session_state.page = "intro"
@@ -17,7 +21,7 @@ if "responses" not in st.session_state:
     st.session_state.responses = {}
 
 # --------------------------------------------------
-# Helper functions
+# Helpers
 # --------------------------------------------------
 def save_response(data):
     file_exists = os.path.isfile("responses.csv")
@@ -33,20 +37,20 @@ def load_responses():
     return pd.DataFrame()
 
 # --------------------------------------------------
-# Intro / Consent
+# Intro
 # --------------------------------------------------
 if st.session_state.page == "intro":
     st.markdown("""
     Welcome!  
     This study explores how people create text and image captions with or without AI help.  
-    Your answers are anonymous. You may stop anytime.
+    Your answers are anonymous, and you may stop anytime.
     """)
     if st.button("Start Survey"):
         st.session_state.page = "demographics"
         st.rerun()
 
 # --------------------------------------------------
-# A. Participant description
+# A. Participant Info
 # --------------------------------------------------
 elif st.session_state.page == "demographics":
     st.header("A. Participant Information")
@@ -56,7 +60,6 @@ elif st.session_state.page == "demographics":
     major = st.text_input("Major or academic background")
     language = st.text_input("Native language (optional)")
     creative = st.text_area("Describe any prior creative work (writing, design, etc.)")
-
 
     if st.button("Next ➡️"):
         st.session_state.responses.update({
@@ -73,7 +76,7 @@ elif st.session_state.page == "demographics":
         st.rerun()
 
 # --------------------------------------------------
-# B. AI Familiarity and Usage
+# B. AI Familiarity
 # --------------------------------------------------
 elif st.session_state.page == "ai_familiarity":
     st.header("B. AI Familiarity and Usage (1–5 scale)")
@@ -93,7 +96,7 @@ elif st.session_state.page == "ai_familiarity":
         st.rerun()
 
 # --------------------------------------------------
-# C. Text generation tasks
+# C. Text Tasks
 # --------------------------------------------------
 elif st.session_state.page == "text_tasks":
     st.header("C. Text Generation: Write Headlines")
@@ -171,7 +174,7 @@ elif st.session_state.page == "text_tasks":
         st.rerun()
 
 # --------------------------------------------------
-# D. Image generation (captions)
+# D. Image Caption Tasks
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
@@ -205,19 +208,23 @@ elif st.session_state.page == "image_tasks":
         ("image_7.jpg", "Brainstorming teamwork captions", [
             "Collaboration in action: where ideas come alive in color.",
             "Teamwork is the art of turning many thoughts into one vision."
+        ]),
+        ("image_8.jpg", "Funny science classroom captions", [
+            "When your financial plan is pure wizardry.",
+            "Inflation, but make it magical."
         ])
     ]
 
     cond = st.session_state.condition
     for img, name, ais in image_sets:
         st.subheader(name)
-    import pathlib
-# inside your image loop:
-     image_path = pathlib.Path(__file__).parent / img
-     if image_path.exists():
-        st.image(str(image_path), caption=f"{name} (placeholder)")
-     else:
-        st.warning(f"⚠️ Could not find {img} — please check file name.")
+        # Absolute path safe loading
+        image_path = Path(__file__).parent / img
+        if image_path.exists():
+            st.image(str(image_path), caption=f"{name}")
+        else:
+            st.warning(f"⚠️ Could not find {img}. Please verify filename.")
+
         if cond == "AI-first":
             st.markdown("### Example AI Captions")
             for c in ais:
