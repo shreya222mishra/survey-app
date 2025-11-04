@@ -211,7 +211,7 @@ elif st.session_state.page == "image_tasks":
     cond = st.session_state.condition
     for img, name, ais in image_sets:
         st.subheader(name)
-        st.image(f"images/{img}", caption=f"{name} (placeholder)")
+        st.image(f"{img}", caption=f"{name} (placeholder)")
         if cond == "AI-first":
             st.markdown("### Example AI Captions")
             for c in ais:
