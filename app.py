@@ -30,16 +30,26 @@ if "image_condition_map" not in st.session_state:
 # Helpers
 # --------------------------------------------------
 def save_response(data):
-    file_exists = os.path.isfile("responses.csv")
-    with open("responses.csv", "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=data.keys())
-        if not file_exists:
-            writer.writeheader()
-        writer.writerow(data)
+    """Append survey result as a row in responses.csv"""
+    df_new = pd.DataFrame([data])
+    file_path = "responses.csv"
+
+    # Append if exists; create if not
+    if os.path.exists(file_path):
+        df_new.to_csv(file_path, mode="a", index=False, header=False, encoding="utf-8")
+    else:
+        df_new.to_csv(file_path, mode="w", index=False, header=True, encoding="utf-8")
+
 
 def load_responses():
-    if os.path.exists("responses.csv"):
-        return pd.read_csv("responses.csv")
+    """Load previous responses"""
+    file_path = "responses.csv"
+    if os.path.exists(file_path):
+        try:
+            return pd.read_csv(file_path)
+        except Exception as e:
+            st.warning(f"⚠️ Could not read existing responses: {e}")
+            return pd.DataFrame()
     return pd.DataFrame()
 
 # --------------------------------------------------
@@ -136,6 +146,7 @@ elif st.session_state.page == "text_tasks":
         }
     }
 
+    # Randomize condition ↔ category once per participant
     if not st.session_state.condition_map:
         topics = random.sample(list(briefs.keys()), 3)
         conditions = ["No-AI", "AI-first", "Human-first"]
@@ -158,8 +169,6 @@ elif st.session_state.page == "text_tasks":
             if user_text.strip() and st.button("Next ➡️"):
                 st.session_state.text_round += 1
                 st.rerun()
-            elif not user_text.strip():
-                st.info("✏️ Please enter your headlines before proceeding.")
 
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
@@ -171,30 +180,23 @@ elif st.session_state.page == "text_tasks":
             if user_text.strip() and st.button("Next ➡️"):
                 st.session_state.text_round += 1
                 st.rerun()
-            elif not user_text.strip():
-                st.info("✏️ Please enter your headlines before proceeding.")
 
         else:  # Human-first
             st.markdown("_Please write your own headlines first._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
-
             if user_text.strip():
                 st.markdown("### Example AI Headlines")
                 for h in content["ai"]:
                     st.write("-", h)
                 st.markdown("**Do you think you could improve your ideas based on these AI examples?**")
-                improve_choice = st.radio(
-                    "Select one:", ["No", "Yes"],
-                    index=0, horizontal=True, key=f"{current_category}_improve"
-                )
+                improve_choice = st.radio("Select one:", ["No", "Yes"],
+                                          index=0, horizontal=True, key=f"{current_category}_improve")
                 revised_text = ""
                 if improve_choice == "Yes":
                     revised_text = st.text_area("Revise your headlines below:", key=f"{current_category}_revised")
-
                 st.session_state.responses[user_key] = user_text
                 st.session_state.responses[f"{current_category}_improved"] = improve_choice
                 st.session_state.responses[f"{current_category}_revised_text"] = revised_text
-
                 if st.button("Next ➡️"):
                     st.session_state.text_round += 1
                     st.rerun()
@@ -203,7 +205,6 @@ elif st.session_state.page == "text_tasks":
 
     else:
         st.subheader("Post-Survey: Reflect on the Text Generation Task")
-        st.markdown("Rate your overall experience across all three rounds (1–5):")
         st.session_state.responses["overall_trust"] = st.slider("Overall, I trusted the AI suggestions.", 1, 5, 3)
         st.session_state.responses["overall_original"] = st.slider("Overall, my ideas felt original.", 1, 5, 3)
         st.session_state.responses["overall_fixation"] = st.slider("It was hard to think beyond the AI’s ideas.", 1, 5, 3)
@@ -214,7 +215,7 @@ elif st.session_state.page == "text_tasks":
             st.rerun()
 
 # --------------------------------------------------
-# D. Image Caption Tasks (2 images × 3 rounds)
+# D. Image Caption Tasks (Counterbalanced)
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
@@ -222,8 +223,7 @@ elif st.session_state.page == "image_tasks":
     all_images = [
         ("image1.jpg", "Cooking caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
-            "Cooking is an art — tasting is quality control.",
-            "When in doubt, taste it out."
+            "Cooking is an art — tasting is quality control."
         ]),
         ("image2.jpg", "1920s party scene captions", [
             "When the champagne hits before the Roaring Twenties end.",
@@ -255,10 +255,10 @@ elif st.session_state.page == "image_tasks":
         ])
     ]
 
-    # Create counterbalanced condition↔image pairs once
+    # Randomize pairs once
     if not st.session_state.image_condition_map:
         random.shuffle(all_images)
-        image_pairs = [all_images[i:i+2] for i in range(0, 6, 2)]  # 3 rounds × 2 images
+        image_pairs = [all_images[i:i+2] for i in range(0, 6, 2)]
         conditions = ["No-AI", "AI-first", "Human-first"]
         random.shuffle(conditions)
         st.session_state.image_condition_map = list(zip(conditions, image_pairs))
@@ -276,7 +276,6 @@ elif st.session_state.page == "image_tasks":
             else:
                 st.warning(f"⚠️ Could not find {img}.")
 
-            # --- Condition logic ---
             if condition == "No-AI":
                 cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
             elif condition == "AI-first":
@@ -320,10 +319,11 @@ elif st.session_state.page == "done":
     if len(df) > 0:
         csv_data = df.to_csv(index=False).encode("utf-8")
         st.download_button(
-            label="Download responses.csv",
+            label="📥 Download responses.csv",
             data=csv_data,
             file_name="responses.csv",
             mime="text/csv"
         )
+        st.info("ℹ️ The app keeps appending new submissions to responses.csv until redeployed. Please download regularly for backup.")
     else:
         st.info("No responses recorded yet.")
