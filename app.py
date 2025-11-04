@@ -31,15 +31,34 @@ if "image_condition_map" not in st.session_state:
 # Helpers
 # --------------------------------------------------
 def save_response(data):
-    """Append a participant's responses safely with quoting."""
+    """Append a participant's responses safely, ensuring consistent column order."""
     df_new = pd.DataFrame([data])
     file_path = "responses.csv"
+
+    # If file exists, align columns before appending
     if os.path.exists(file_path):
-        df_new.to_csv(file_path, mode="a", index=False, header=False,
-                      encoding="utf-8", quoting=csv.QUOTE_ALL)
+        try:
+            df_existing = pd.read_csv(file_path)
+            # Make sure both dataframes have the same columns
+            for col in df_existing.columns:
+                if col not in df_new.columns:
+                    df_new[col] = ""
+            for col in df_new.columns:
+                if col not in df_existing.columns:
+                    df_existing[col] = ""
+            # Match the order
+            df_new = df_new[df_existing.columns]
+            # Append safely
+            df_final = pd.concat([df_existing, df_new], ignore_index=True)
+            df_final.to_csv(file_path, index=False, encoding="utf-8", quoting=csv.QUOTE_ALL)
+        except Exception as e:
+            backup_name = f"responses_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+            os.rename(file_path, backup_name)
+            st.warning(f"⚠️ responses.csv corrupted — backed up as {backup_name}. A new file created.")
+            df_new.to_csv(file_path, index=False, encoding="utf-8", quoting=csv.QUOTE_ALL)
     else:
-        df_new.to_csv(file_path, mode="w", index=False, header=True,
-                      encoding="utf-8", quoting=csv.QUOTE_ALL)
+        df_new.to_csv(file_path, index=False, encoding="utf-8", quoting=csv.QUOTE_ALL)
+
 
 
 def load_responses():
