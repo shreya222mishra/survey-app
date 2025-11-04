@@ -17,17 +17,7 @@ st.title("🧠 AI Creativity and Idea Generation Survey")
 if "page" not in st.session_state:
     st.session_state.page = "intro"
 if "responses" not in st.session_state:
-    st.session_state.responses = {
-        "no_ai_text": "",
-        "with_ai_text": "",
-        "human_first_text": "",
-        "no_ai_image1": "",
-        "no_ai_image2": "",
-        "with_ai_image1": "",
-        "with_ai_image2": "",
-        "human_first_image1": "",
-        "human_first_image2": ""
-    }
+    st.session_state.responses = {}
 if "text_round" not in st.session_state:
     st.session_state.text_round = 0
 if "condition_map" not in st.session_state:
@@ -213,25 +203,48 @@ elif st.session_state.page == "text_tasks":
 
         st.subheader(f"Round {round_idx + 1}: {current_category}")
         st.write("**Brief:**", content["brief"])
-
-        user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
+        user_key = f"{current_category}_response"
 
         if condition == "No-AI":
-            st.session_state.responses["no_ai_text"] = user_text
+            st.markdown("_Compose a striking headline for this brief._")
+            user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
+            st.session_state.responses[user_key] = user_text
+            if user_text.strip() and st.button("Next ➡️"):
+                st.session_state.text_round += 1
+                st.rerun()
+
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            st.session_state.responses["with_ai_text"] = user_text
-        else:
-            st.markdown("### Example AI Headlines")
-            for h in content["ai"]:
-                st.write("-", h)
-            st.session_state.responses["human_first_text"] = user_text
+            st.markdown("_Brainstorm a clever headline inspired by the above._")
+            user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
+            st.session_state.responses[user_key] = user_text
+            if user_text.strip() and st.button("Next ➡️"):
+                st.session_state.text_round += 1
+                st.rerun()
 
-        if user_text.strip() and st.button("Next ➡️"):
-            st.session_state.text_round += 1
-            st.rerun()
+        else:  # Human-first
+            st.markdown("_Give this story a headline with flair._")
+            user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
+            if user_text.strip():
+                st.markdown("### Example AI Headlines")
+                for h in content["ai"]:
+                    st.write("-", h)
+                st.markdown("**Do you think you could improve your ideas based on these AI examples?**")
+                improve_choice = st.radio("Select one:", ["No", "Yes"],
+                                          index=0, horizontal=True, key=f"{current_category}_improve")
+                revised_text = ""
+                if improve_choice == "Yes":
+                    revised_text = st.text_area("Revise your headline below:", key=f"{current_category}_revised")
+                st.session_state.responses[user_key] = user_text
+                st.session_state.responses[f"{current_category}_improved"] = improve_choice
+                st.session_state.responses[f"{current_category}_revised_text"] = revised_text
+                if st.button("Next ➡️"):
+                    st.session_state.text_round += 1
+                    st.rerun()
+            else:
+                st.info("✏️ Write a punchy headline before proceeding.")
 
     else:
         st.session_state.page = "image_tasks"
@@ -269,6 +282,14 @@ elif st.session_state.page == "image_tasks":
         ("image6.jpg", "Inspirational caption ideas", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone."
+        ]),
+        ("image7.jpg", "Nostalgic caption ideas", [
+            "Collaboration in action: where ideas come alive in color.",
+            "Teamwork is the art of turning many thoughts into one vision."
+        ]),
+        ("image8.jpg", "Funny Funny caption ideas", [
+            "When your financial plan is pure wizardry.",
+            "Inflation, but make it magical."
         ])
     ]
 
@@ -284,7 +305,7 @@ elif st.session_state.page == "image_tasks":
         condition, image_pair = st.session_state.image_condition_map[img_round]
         st.subheader(f"Round {img_round + 1}: Condition = {condition}")
 
-        for idx, (img, name, ais) in enumerate(image_pair, start=1):
+        for img, name, ais in image_pair:
             st.markdown(f"### {name}")
             image_path = Path(__file__).parent / img
             if image_path.exists():
@@ -292,19 +313,26 @@ elif st.session_state.page == "image_tasks":
             else:
                 st.warning(f"⚠️ Could not find {img}.")
 
-            cap = st.text_area("Write your caption:", key=f"{img}_text")
             if condition == "No-AI":
-                st.session_state.responses[f"no_ai_image{idx}"] = cap
+                cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
             elif condition == "AI-first":
                 st.markdown("**Example AI Captions**")
                 for c in ais:
                     st.write("-", c)
-                st.session_state.responses[f"with_ai_image{idx}"] = cap
+                cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
             else:
-                st.markdown("**Example AI Captions**")
-                for c in ais:
-                    st.write("-", c)
-                st.session_state.responses[f"human_first_image{idx}"] = cap
+                cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
+                if cap.strip():
+                    st.markdown("**Example AI Captions**")
+                    for c in ais:
+                        st.write("-", c)
+                    st.markdown("**Could you improve your caption based on these AI examples?**")
+                    improve_choice = st.radio("Select one:", ["No", "Yes"], index=0,
+                                              horizontal=True, key=f"{img}_improve")
+                    if improve_choice == "Yes":
+                        cap += "\n[Revised] " + st.text_area("Revise your caption below:", key=f"{img}_revised")
+
+            st.session_state.responses[f"{img}_caption"] = cap
 
         if st.button("Next ➡️"):
             st.session_state.image_round += 1
@@ -364,3 +392,4 @@ elif st.session_state.page == "done":
             st.info("No responses recorded yet.")
     elif admin_key:
         st.error("❌ Incorrect passcode. Access denied.")
+
