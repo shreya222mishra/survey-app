@@ -206,7 +206,7 @@ elif st.session_state.page == "text_tasks":
         user_key = f"{current_category}_response"
 
         if condition == "No-AI":
-            st.markdown("_Please write your own headline for this brief._")
+            st.markdown("_Compose a striking headline for this brief._")
             user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
             st.session_state.responses[user_key] = user_text
             if user_text.strip() and st.button("Next ➡️"):
@@ -217,7 +217,7 @@ elif st.session_state.page == "text_tasks":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
                 st.write("-", h)
-            st.markdown("_Now write your own headline inspired by the above._")
+            st.markdown("_Brainstorm a clever headline inspired by the above._")
             user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
             st.session_state.responses[user_key] = user_text
             if user_text.strip() and st.button("Next ➡️"):
@@ -225,7 +225,7 @@ elif st.session_state.page == "text_tasks":
                 st.rerun()
 
         else:  # Human-first
-            st.markdown("_Please write your own headline first._")
+            st.markdown("_Give this story a headline with flair._")
             user_text = st.text_area("Write your headline:", key=f"{current_category}_text")
             if user_text.strip():
                 st.markdown("### Example AI Headlines")
@@ -244,7 +244,7 @@ elif st.session_state.page == "text_tasks":
                     st.session_state.text_round += 1
                     st.rerun()
             else:
-                st.info("✏️ Please enter your headline before proceeding.")
+                st.info("✏️ Write a punchy headline before proceeding.")
 
     else:
         st.session_state.page = "image_tasks"
@@ -259,11 +259,11 @@ elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
     all_images = [
-        ("image1.jpg", "Cooking caption ideas", [
+        ("image1.jpg", "Relatable caption ideas", [
             "Taste-testing: the most important step in every masterpiece.",
             "Cooking is an art — tasting is quality control."
         ]),
-        ("image2.jpg", "1920s party scene captions", [
+        ("image2.jpg", "Playful caption ideas", [
             "When the champagne hits before the Roaring Twenties end.",
             "Pour decisions make the best memories."
         ]),
@@ -275,19 +275,19 @@ elif st.session_state.page == "image_tasks":
             "When 3D movies were too real.",
             "Immersive cinema before VR was even a dream."
         ]),
-        ("image5.jpg", "Bubble party captions", [
+        ("image5.jpg", "Celebration caption ideas", [
             "When the bubble gun steals the show.",
             "POV: The party just hit its peak."
         ]),
-        ("image6.jpg", "Mountain hiking captions", [
+        ("image6.jpg", "Inspirational caption ideas", [
             "Every trail leads to a story worth telling.",
             "Adventure begins at the edge of your comfort zone."
         ]),
-        ("image7.jpg", "Brainstorming teamwork captions", [
+        ("image7.jpg", "Nostalgic caption ideas", [
             "Collaboration in action: where ideas come alive in color.",
             "Teamwork is the art of turning many thoughts into one vision."
         ]),
-        ("image8.jpg", "Funny science classroom captions", [
+        ("image8.jpg", "Funny Funny caption ideas", [
             "When your financial plan is pure wizardry.",
             "Inflation, but make it magical."
         ])
