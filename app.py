@@ -249,6 +249,9 @@ elif st.session_state.page == "text_tasks":
 # --------------------------------------------------
 # D. Image Caption Tasks (Fixed Order, Shuffled Images)
 # --------------------------------------------------
+# --------------------------------------------------
+# D. Image Caption Tasks (Fixed Order, Shuffled Images)
+# --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
 
@@ -279,7 +282,7 @@ elif st.session_state.page == "image_tasks":
         ])
     ]
 
-    # Fixed order of rounds, shuffle image pairs only
+    # Fixed round order (No-AI → AI-first → Human-first), shuffled images
     if not st.session_state.image_condition_map:
         random.shuffle(all_images)
         image_pairs = [all_images[i:i+2] for i in range(0, 6, 2)]
@@ -302,22 +305,47 @@ elif st.session_state.page == "image_tasks":
             else:
                 st.warning(f"⚠️ Could not find {img}.")
 
-            cap = st.text_area("Write your caption:", key=f"{img}_text")
+            user_key = f"{condition.lower().replace('-', '_')}_{img}"
 
-            if condition == "AI-first":
+            # --- Condition-specific logic ---
+            if condition == "No-AI":
+                st.markdown("_Write your own caption(s) for this image._")
+                cap = st.text_area("Your caption:", key=f"{img}_text")
+                st.session_state.responses[user_key] = cap
+
+            elif condition == "AI-first":
                 st.markdown("**Example AI Captions**")
                 for c in ais:
                     st.write("-", c)
-            elif condition == "Human-first" and cap.strip():
-                st.markdown("**Example AI Captions**")
-                for c in ais:
-                    st.write("-", c)
+                st.markdown("_Now write your own caption(s) inspired by the above._")
+                cap = st.text_area("Your caption:", key=f"{img}_text")
+                st.session_state.responses[user_key] = cap
 
-            st.session_state.responses[f"{condition.lower().replace('-', '_')}_{img}"] = cap
+            else:  # Human-first
+                st.markdown("_Write your own caption(s) first._")
+                cap = st.text_area("Your caption:", key=f"{img}_text")
+                st.session_state.responses[user_key] = cap
+
+                if cap.strip():
+                    st.markdown("### Example AI Captions")
+                    for c in ais:
+                        st.write("-", c)
+
+                    st.markdown("**Would you like to revise your caption based on these AI examples?**")
+                    improve_choice = st.radio("Select one:", ["No", "Yes"], index=0,
+                                              horizontal=True, key=f"{img}_improve")
+
+                    revised_text = ""
+                    if improve_choice == "Yes":
+                        revised_text = st.text_area("Revise your caption below:", key=f"{img}_revised")
+
+                    st.session_state.responses[f"{user_key}_improved"] = improve_choice
+                    st.session_state.responses[f"{user_key}_revised"] = revised_text
 
         if st.button("Next ➡️"):
             st.session_state.image_round += 1
             st.rerun()
+
     else:
         st.session_state.page = "post_reflection"
         st.rerun()
