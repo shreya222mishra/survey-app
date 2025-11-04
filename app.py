@@ -48,7 +48,7 @@ if st.session_state.page == "intro":
     """)
     if st.button("Start Survey"):
         st.session_state.page = "demographics"
-        st.experimental_rerun()
+        st.rerun()
 
 # --------------------------------------------------
 # A. Participant description
@@ -69,7 +69,7 @@ elif st.session_state.page == "demographics":
             "timestamp_start": datetime.now().isoformat()
         })
         st.session_state.page = "ai_familiarity"
-        st.experimental_rerun()
+        st.rerun()
 
 # --------------------------------------------------
 # B. AI Familiarity and Usage
@@ -89,7 +89,7 @@ elif st.session_state.page == "ai_familiarity":
     if st.button("Next ➡️"):
         st.session_state.responses.update(likerts)
         st.session_state.page = "text_tasks"
-        st.experimental_rerun()
+        st.rerun()
 
 # --------------------------------------------------
 # C. Text generation tasks
@@ -159,7 +159,7 @@ elif st.session_state.page == "text_tasks":
 
     if st.button("Next ➡️"):
         st.session_state.page = "image_tasks"
-        st.experimental_rerun()
+        st.rerun()
 
 # --------------------------------------------------
 # D. Image generation (captions)
@@ -222,7 +222,7 @@ elif st.session_state.page == "image_tasks":
         st.session_state.responses["timestamp_end"] = datetime.now().isoformat()
         save_response(st.session_state.responses)
         st.session_state.page = "done"
-        st.experimental_rerun()
+        st.rerun()
 
 # --------------------------------------------------
 # End
