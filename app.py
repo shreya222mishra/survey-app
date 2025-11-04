@@ -21,6 +21,10 @@ if "text_round" not in st.session_state:
     st.session_state.text_round = 0
 if "condition_map" not in st.session_state:
     st.session_state.condition_map = []
+if "image_round" not in st.session_state:
+    st.session_state.image_round = 0
+if "image_condition_map" not in st.session_state:
+    st.session_state.image_condition_map = []
 
 # --------------------------------------------------
 # Helpers
@@ -133,11 +137,11 @@ elif st.session_state.page == "text_tasks":
         }
     }
 
-    # 🔀 Randomized condition ↔ category mapping once per participant
+    # 🔀 Randomized mapping of conditions ↔ categories once per participant
     if not st.session_state.condition_map:
         topics = random.sample(list(briefs.keys()), 3)
         conditions = ["No-AI", "AI-first", "Human-first"]
-        random.shuffle(conditions)  # randomize condition order too
+        random.shuffle(conditions)
         st.session_state.condition_map = list(zip(conditions, topics))
 
     round_idx = st.session_state.text_round
@@ -149,7 +153,7 @@ elif st.session_state.page == "text_tasks":
         st.write("**Brief:**", content["brief"])
         user_key = f"{current_category}_response"
 
-        # ---------- Round Type Logic ----------
+        # ---------- No-AI ----------
         if condition == "No-AI":
             st.markdown("_Please write your own headlines for this brief._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
@@ -160,6 +164,7 @@ elif st.session_state.page == "text_tasks":
             elif not user_text.strip():
                 st.info("✏️ Please enter your headlines before proceeding.")
 
+        # ---------- AI-first ----------
         elif condition == "AI-first":
             st.markdown("### Example AI Headlines")
             for h in content["ai"]:
@@ -173,7 +178,8 @@ elif st.session_state.page == "text_tasks":
             elif not user_text.strip():
                 st.info("✏️ Please enter your headlines before proceeding.")
 
-        else:  # Human-first
+        # ---------- Human-first ----------
+        else:
             st.markdown("_Please write your own headlines first._")
             user_text = st.text_area("Write 3–5 headlines:", key=f"{current_category}_text")
 
@@ -195,7 +201,6 @@ elif st.session_state.page == "text_tasks":
                         key=f"{current_category}_revised"
                     )
 
-                # Save responses
                 st.session_state.responses[user_key] = user_text
                 st.session_state.responses[f"{current_category}_improved"] = improve_choice
                 st.session_state.responses[f"{current_category}_revised_text"] = revised_text
@@ -206,7 +211,6 @@ elif st.session_state.page == "text_tasks":
             else:
                 st.info("✏️ Please enter your headlines before proceeding.")
 
-    # ---------- Post-survey after all rounds ----------
     else:
         st.subheader("Post-Survey: Reflect on the Text Generation Task")
         st.markdown("Rate your overall experience across all three rounds (1–5):")
@@ -215,10 +219,12 @@ elif st.session_state.page == "text_tasks":
         st.session_state.responses["overall_fixation"] = st.slider("It was hard to think beyond the AI’s ideas.", 1, 5, 3)
         if st.button("Next ➡️"):
             st.session_state.page = "image_tasks"
+            st.image_round = 0
+            st.image_condition_map = []
             st.rerun()
 
 # --------------------------------------------------
-# D. Image Caption Tasks
+# D. Image Caption Tasks (Fully Counterbalanced)
 # --------------------------------------------------
 elif st.session_state.page == "image_tasks":
     st.header("D. Image Caption Tasks")
@@ -236,67 +242,58 @@ elif st.session_state.page == "image_tasks":
         ("image3.jpg", "Photographers with cameras captions", [
             "Smile! You’re making tomorrow’s headlines.",
             "Before smartphones, there were these warriors of the lens."
-        ]),
-        ("image4.jpg", "3D movie reaction captions", [
-            "When 3D movies were too real.",
-            "Immersive cinema before VR was even a dream."
-        ]),
-        ("image5.jpg", "Bubble party captions", [
-            "When the bubble gun steals the show.",
-            "POV: The party just hit its peak."
-        ]),
-        ("image6.jpg", "Mountain hiking captions", [
-            "Every trail leads to a story worth telling.",
-            "Adventure begins at the edge of your comfort zone."
-        ]),
-        ("image7.jpg", "Brainstorming teamwork captions", [
-            "Collaboration in action: where ideas come alive in color.",
-            "Teamwork is the art of turning many thoughts into one vision."
-        ]),
-        ("image8.jpg", "Funny science classroom captions", [
-            "When your financial plan is pure wizardry.",
-            "Inflation, but make it magical."
         ])
     ]
 
-    cond = random.choice(["AI-first", "Human-first", "No-AI"])
-    for img, name, ais in image_sets:
-        st.subheader(name)
+    # 🔀 Randomize conditions and images
+    if not st.session_state.image_condition_map:
+        imgs = random.sample(image_sets, 3)
+        conditions = ["No-AI", "AI-first", "Human-first"]
+        random.shuffle(conditions)
+        st.session_state.image_condition_map = list(zip(conditions, imgs))
+
+    img_round = st.session_state.image_round
+    if img_round < 3:
+        condition, (img, name, ais) = st.session_state.image_condition_map[img_round]
+
+        st.subheader(f"Round {img_round + 1}: {name}")
         image_path = Path(__file__).parent / img
         if image_path.exists():
             st.image(str(image_path), caption=f"{name}")
         else:
             st.warning(f"⚠️ Could not find {img}. Please verify filename.")
 
-        if cond == "AI-first":
-            st.markdown("### Example AI Captions")
-            for c in ais:
-                st.write("-", c)
-            st.session_state.responses[f"{img}_caption"] = st.text_area("Write your own caption(s):", key=f"{img}_text")
-        elif cond == "Human-first":
+        # --- Condition Logic ---
+        if condition == "No-AI":
             cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
+        elif condition == "AI-first":
             st.markdown("### Example AI Captions")
-            for c in ais:
-                st.write("-", c)
-            st.session_state.responses[f"{img}_caption"] = cap
-        else:
-            st.session_state.responses[f"{img}_caption"] = st.text_area("Write your own caption(s):", key=f"{img}_text")
+            for c in ais: st.write("-", c)
+            cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
+        else:  # Human-first
+            cap = st.text_area("Write your own caption(s):", key=f"{img}_text")
+            if cap.strip():
+                st.markdown("### Example AI Captions")
+                for c in ais: st.write("-", c)
+                st.markdown("**Do you think you could improve your caption based on these AI examples?**")
+                improve_choice = st.radio(
+                    "Select one:", ["No", "Yes"],
+                    index=0, horizontal=True, key=f"{img}_improve"
+                )
+                if improve_choice == "Yes":
+                    cap += "\n[Revised] " + st.text_area("Revise your caption below:", key=f"{img}_revised")
 
-        st.session_state.responses[f"{img}_trust"] = st.slider(
-            "I trusted the AI suggestions.", 1, 5, 3, key=f"{img}_trust_slider"
-        )
-        st.session_state.responses[f"{img}_original"] = st.slider(
-            "My ideas felt original.", 1, 5, 3, key=f"{img}_orig_slider"
-        )
-        st.session_state.responses[f"{img}_fixation"] = st.slider(
-            "It was hard to think beyond the AI’s ideas.", 1, 5, 3, key=f"{img}_fix_slider"
-        )
+        st.session_state.responses[f"{img}_caption"] = cap
+        if st.button("Next ➡️"):
+            st.session_state.image_round += 1
+            st.rerun()
 
-    if st.button("Finish Survey ✅"):
-        st.session_state.responses["timestamp_end"] = datetime.now().isoformat()
-        save_response(st.session_state.responses)
-        st.session_state.page = "done"
-        st.rerun()
+    else:
+        if st.button("Finish Survey ✅"):
+            st.session_state.responses["timestamp_end"] = datetime.now().isoformat()
+            save_response(st.session_state.responses)
+            st.session_state.page = "done"
+            st.rerun()
 
 # --------------------------------------------------
 # End Page
