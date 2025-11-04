@@ -153,7 +153,7 @@ elif st.session_state.page == "text_tasks":
 
     briefs = {
         "Science & Technology": {
-            "brief": " Researchers at a university lab have developed a new electric vehicle battery that can fully charge in under five minutes.
+            "brief: Researchers at a university lab have developed a new electric vehicle battery that can fully charge in under five minutes.
  The innovation could drastically reduce charging time and expand EV adoption worldwide.
  Automakers are already expressing interest in commercial trials.",
             "ai": [
@@ -163,7 +163,7 @@ elif st.session_state.page == "text_tasks":
             ]
         },
         "Culture & Sports": {
-            "brief": "A small rural town has become the global stage for an international chess festival.
+            "brief: A small rural town has become the global stage for an international chess festival.
  Players from over 40 countries are competing in local cafés, schools, and community centers.
  The event has brought tourism, media attention, and a new sense of pride to the community.",
             "ai": [
@@ -173,7 +173,7 @@ elif st.session_state.page == "text_tasks":
             ]
         },
         "Health & Wellness": {
-            "brief": "A new smartphone app claims it can detect a person’s stress levels simply by analyzing voice tone and pace.
+            "brief: A new smartphone app claims it can detect a person’s stress levels simply by analyzing voice tone and pace.
  Developers say it could help users track mental health in real time.
  Experts are cautiously optimistic but warn about data privacy and accuracy concerns.",
             "ai": [
