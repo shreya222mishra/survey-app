@@ -224,7 +224,7 @@ elif st.session_state.page == "text_tasks":
 
         if condition == "No-AI":
             st.markdown("_Compose a striking headline for this brief._")
-            user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
+            user_text = st.text_area("Write your headline, click outside the box once done:", key=f"text_{round_idx}")
             st.session_state.responses[base_key] = f"{current_category} — {user_text}"
 
         elif condition == "AI-first":
@@ -232,12 +232,12 @@ elif st.session_state.page == "text_tasks":
             for h in content["ai"]:
                 st.write("-", h)
             st.markdown("_Invent an eye-catching headline inspired by the above._")
-            user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
+            user_text = st.text_area("Write your headline, click outside the box once done, click outside the box once done:", key=f"text_{round_idx}")
             st.session_state.responses[base_key] = f"{current_category} — {user_text}"
 
         else:  # Human-first
             st.markdown("_Write a punchy headline for this news brief, then view AI examples._")
-            user_text = st.text_area("Write your headline:", key=f"text_{round_idx}")
+            user_text = st.text_area("Write your headline, click outside the box once done:", key=f"text_{round_idx}")
             st.session_state.responses[base_key] = f"{current_category} — {user_text}"
 
             if user_text.strip():
@@ -356,25 +356,25 @@ elif st.session_state.page == "image_tasks":
             # ---- Input section per condition ----
             if condition == "No-AI":
                 st.markdown("_Write your own caption(s) for this image._")
-                cap = st.text_area("Your caption:", key=f"{img_file}_text")
+                cap = st.text_area("Write your caption, click outside the box once done:", key=f"{img_file}_text")
 
             elif condition == "AI-first":
                 st.markdown("**Example AI Captions**")
                 for c in ai_examples:
                     st.write("-", c)
                 st.markdown("_Now write your own caption(s) inspired by the above._")
-                cap = st.text_area("Your caption:", key=f"{img_file}_text")
+                cap = st.text_area("Write your caption, click outside the box once done:", key=f"{img_file}_text")
 
             else:  # Human-first
                 st.markdown("_Write your own caption(s) first._")
-                cap = st.text_area("Your caption:", key=f"{img_file}_text")
+                cap = st.text_area("Write your caption, click outside the box once done:", key=f"{img_file}_text")
 
                 if cap.strip():
                     st.markdown("### Example AI Captions")
                     for c in ai_examples:
                         st.write("-", c)
 
-                    st.markdown("**Would you like to revise your caption based on these AI examples?**")
+                    st.markdown("**Would you like to revise your caption,based on these AI examples?**")
                     improve_choice = st.radio(
                         "Select one:", ["No", "Yes"],
                         index=0, horizontal=True, key=f"{img_file}_improve"
@@ -383,7 +383,7 @@ elif st.session_state.page == "image_tasks":
                     revised_text = ""
                     if improve_choice == "Yes":
                         revised_text = st.text_area(
-                            "Revise your caption below:", key=f"{img_file}_revised"
+                            "Revise your caption, click outside the box once done:", key=f"{img_file}_revised"
                         )
 
                     st.session_state.responses[f"{base_key}_improved"] = improve_choice
